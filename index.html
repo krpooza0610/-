@@ -115,33 +115,30 @@ cursor: pointer;
 <div style="font-size: 20px;">🔔</div>
 </header>
 
-    <div id="chat-page" class="page">
-        <div style="display: flex; gap: 10px; align-items: center;">
-<button class="send-btn" onclick="sendMessage()">🚀</button>
-            </div>
-<div id="home-page" class="page active">
-        <div class="welcome-box" style="text-align: left;">
-        <h3 style="color: var(--accent);">ห้องแชท MANBODTIP</h3>
-        <p style="font-size: 12px; opacity: 0.7;">คุยสดๆ กับคนไทยในเกาหลี</p>
-        </div>
-        <div id="chat-display" style="height: 50vh; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 15px; padding: 15px; margin-bottom: 15px;">
-        <div style="color: var(--text-dim); text-align: center; margin-top: 20px;">กำลังเชื่อมต่อสัญญาณ...</div>
-        </div>
+<div id="chat-page" class="page">
+    <div class="welcome-box" style="text-align: left;">
+    <h3 style="color: var(--accent);">ห้องแชท MANBODTIP</h3>
+    <p style="font-size: 12px; opacity: 0.7;">คุยสดๆ กับคนไทยในเกาหลี</p>
+    </div>
 
-        <div style="display: flex; gap: 10px;">
-        <input type="text" id="chatInput" placeholder="พิมพ์ข้อความที่นี่..." style="flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid var(--glass); background: var(--glass); color: white; outline: none;">
-        <button style="width: 45px; height: 45px; border-radius: 50%; border: none; background: var(--primary); color: white;">ส่ง</button>
-        </div>
-        </div>
-<div class="welcome-box">
-<h2>ยินดีต้อนรับครับภู!</h2>
-<p style="font-size: 14px; color: var(--text-dim); margin-top: 10px;">นี่คือโครงสร้างใหม่ที่ชิดซ้ายและเป็นระเบียบที่สุด</p>
-</div>
-<div style="text-align: center; padding: 40px; opacity: 0.5;">
-<p>กำลังเตรียมโหลดข้อมูลจากระบบเดิม...</p>
-</div>
-</div>
+    <div id="chat-display" style="height: 50vh; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 15px; padding: 15px; margin-bottom: 15px;">
+    <div style="color: var(--text-dim); text-align: center; margin-top: 20px;">กำลังเชื่อมต่อสัญญาณ...</div>
+    </div>
 
+    <div style="display: flex; gap: 10px; align-items: center;">
+    <input type="text" id="chatInput" placeholder="พิมพ์ข้อความที่นี่..." style="flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid var(--glass); background: var(--glass); color: white; outline: none;">
+    <button class="send-btn" onclick="sendMessage()">🚀</button>
+    </div>
+    </div> <div id="home-page" class="page active">
+    <div class="welcome-box">
+    <h2>ยินดีต้อนรับครับภู!</h2>
+    <p style="font-size: 14px; color: var(--text-dim); margin-top: 10px;">นี่คือโครงสร้างใหม่ที่ชิดซ้ายและเป็นระเบียบที่สุด</p>
+    </div>
+    <div style="text-align: center; padding: 40px; opacity: 0.5;">
+    <p>กำลังเตรียมโหลดข้อมูลจากระบบเดิม...</p>
+    </div>
+    </div>
+    
 <nav class="nav-bar">
     <div class="nav-item active" onclick="showPage('home-page', this)">🏠<br>หน้าหลัก</div>
 
