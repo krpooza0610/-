@@ -188,6 +188,28 @@ border-color: var(--accent);
     </nav>
     
 <script>
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "firebase/app";
+    import { getAnalytics } from "firebase/analytics";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+      apiKey: "AIzaSyB6WVXMJFGYSChj4nkULqZa-8x-odUwEzE",
+        authDomain: "manbodtip.firebaseapp.com",
+          databaseURL: "https://manbodtip-default-rtdb.firebaseio.com",
+            projectId: "manbodtip",
+              storageBucket: "manbodtip.firebasestorage.app",
+                messagingSenderId: "654202068900",
+                  appId: "1:654202068900:web:595437786bc69233fa6b31",
+                    measurementId: "G-GC952E355C"
+                    };
+
+                    // Initialize Firebase
+                    const app = initializeApp(firebaseConfig);
+                    const analytics = getAnalytics(app);
     function showPage(pageId, element) {
     // 1. ซ่อนทุกหน้าที่มีคลาสชื่อ 'page'
     document.querySelectorAll('.page').forEach(p => {
@@ -204,11 +226,26 @@ border-color: var(--accent);
     element.classList.add('active');
     }
     // ฟังก์ชันส่งข้อความแบบจำลอง
-    window.sendMessage = () => {
-    const input = document.getElementById('chatInput');
-    const display = document.getElementById('chat-display');
+window.sendMessage = () => {
+        const input = document.getElementById('chatInput');
+            if(input.value.trim() !== "") {
+                    // ส่งขึ้นฐานข้อมูล (ไม่ต้องแสดงผลเองแล้ว)
+                            push(chatRef, {
+                                        text: input.value,
+                                                    time: Date.now()
+                                                            });
+                                                                    input.value = "";
+                                                                        }
+                                                                        }
 
-    if(input.value.trim() !== "") {
+                                                                        // ระบบ "หูทิพย์" คอยฟังว่าใครส่งแชทมา (ทุกเครื่องจะเห็นพร้อมกัน)
+                                                                        onChildAdded(chatRef, (snapshot) => {
+                                                                            const data = snapshot.val();
+                                                                                const display = document.getElementById('chat-display');
+                                                                                    const newMsg = `<div class="msg-bubble">${data.text}</div>`;
+                                                                                        display.insertAdjacentHTML('beforeend', newMsg);
+                                                                                            display.scrollTop = display.scrollHeight;
+                                                                                            });
     // สร้างกล่องข้อความใหม่
     const newMsg = `<div class="msg-bubble">${input.value}</div>`;
     // เอาไปแปะในหน้าจอแสดงผล
