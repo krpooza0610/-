@@ -60,6 +60,49 @@ animation: aura-glow 2s infinite alternate; /* ให้มันกะพริ
 from { opacity: 0.8; filter: brightness(1); }
 to { opacity: 1; filter: brightness(1.5); }
 }
+/* --- ตกแต่งหน้าแชทสด --- */
+#chat-display {
+display: flex;
+flex-direction: column;
+gap: 10px;
+/* เพิ่มเงาให้ดูนูนออกมาจากพื้นหลัง */
+box-shadow: inset 0 0 20px rgba(0,0,0,0.5); 
+border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* ตกแต่งกล่องข้อความแชท (ให้ดูเหมือนแอปดังๆ) */
+.msg-bubble {
+background: var(--glass);
+padding: 10px 15px;
+border-radius: 15px;
+border-bottom-left-radius: 2px;
+max-width: 85%;
+align-self: flex-start;
+font-size: 14px;
+border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* ปรับแต่งช่องกรอกข้อความให้เด่นขึ้น */
+#chatInput {
+background: rgba(255,255,255,0.1) !important;
+border: 1px solid var(--primary) !important;
+box-shadow: 0 0 10px rgba(106, 17, 203, 0.3);
+}
+
+/* ปรับแต่งปุ่มส่ง */
+.send-btn {
+background: var(--primary);
+color: white;
+border: none;
+width: 45px;
+height: 45px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+cursor: pointer;
+}
 </style>
 </head>
 <body>
@@ -74,6 +117,10 @@ to { opacity: 1; filter: brightness(1.5); }
 
 <div id="home-page" class="page active">
     <div id="chat-page" class="page">
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="chatInput" placeholder="พิมพ์ข้อความที่นี่..." style="flex: 1; padding: 12px 15px; border-radius: 25px; border: none; color: white; outline: none;">
+            <button class="send-btn">🚀</button>
+            </div>
         <div class="welcome-box" style="text-align: left;">
         <h3 style="color: var(--accent);">ห้องแชท MANBODTIP</h3>
         <p style="font-size: 12px; opacity: 0.7;">คุยสดๆ กับคนไทยในเกาหลี</p>
