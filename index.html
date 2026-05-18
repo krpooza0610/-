@@ -106,6 +106,14 @@ cursor: pointer;
 </style>
 </head>
 <body>
+<div style="padding: 10px; background: rgba(0,0,0,0.3); text-align: center;">
+    <audio id="bgMusic" loop>
+    <source src="ลิ้งก์เพลงของภู.mp3" type="audio/mpeg">
+    </audio>
+    <button onclick="toggleMusic()" style="background: var(--glass); color: white; border: 1px solid var(--primary); padding: 5px 15px; border-radius: 20px; font-size: 12px;">
+    <span id="musicStatus">🎵 เล่นเพลง</span>
+    </button>
+    </div>
 
 <header class="main-header">
 <div class="logo-zone">
@@ -179,6 +187,19 @@ cursor: pointer;
     input.value = "";
     // เลื่อนหน้าจอลงล่างสุด
     display.scrollTop = display.scrollHeight;
+    }
+    }
+    // ฟังก์ชัน เปิด-ปิด เพลง
+    function toggleMusic() {
+    const music = document.getElementById('bgMusic');
+    const statusText = document.getElementById('musicStatus');
+
+    if (music.paused) {
+    music.play();
+    statusText.innerText = "⏸️ หยุดเพลง";
+    } else {
+    music.pause();
+    statusText.innerText = "🎵 เล่นเพลง";
     }
     }
     </script>
