@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Thai in Korea V2</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* --- 1. ตั้งค่าสีและรากฐาน (Theme Setup) --- */
+:root {
+--bg-dark: #0f0c29;
+--bg-gradient: linear-gradient(180deg, #0f0c29 0%, #302b63 100%);
+--primary: #6a11cb;
+--accent: #ffd700;
+--glass: rgba(255, 255, 255, 0.1);
+--text-main: #ffffff;
+--text-dim: #94a3b8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Chakra Petch', sans-serif; }
+body { background: var(--bg-gradient); color: var(--text-main); min-height: 100vh; padding-bottom: 80px; overflow-x: hidden; }
+
+/* --- 2. ส่วนหัวแอป (Header) --- */
+.main-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; background: rgba(15, 12, 41, 0.8); backdrop-filter: blur(10px); }
+.logo-zone b { font-size: 20px; display: block; background: linear-gradient(to right, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.logo-zone span { font-size: 11px; color: var(--text-dim); }
+
+/* --- 3. หน้าจอหลัก (Home Content) --- */
+.page { padding: 15px; display: none; }
+.page.active { display: block; }
+.welcome-box { background: var(--glass); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; text-align: center; }
+
+/* --- 4. เมนูด้านล่าง (Floating Nav) --- */
+.nav-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; background: rgba(255,255,255,0.1); backdrop-filter: blur(15px); border-radius: 30px; display: flex; justify-content: space-around; align-items: center; height: 65px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1000; }
+.nav-item { color: var(--text-dim); text-align: center; font-size: 10px; cursor: pointer; transition: 0.3s; }
+.nav-item.active { color: var(--accent); }
+.nav-item i { font-size: 20px; display: block; margin-bottom: 4px; }
+.center-btn { width: 55px; height: 55px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-top: -35px; border: 5px solid var(--bg-dark); box-shadow: 0 5px 15px rgba(106, 17, 203, 0.4); }
+</style>
+</head>
+<body>
+
+<header class="main-header">
+<div class="logo-zone"><b>THAI IN KOREA</b><span>COMMUNITY V2</span></div>
+<div style="font-size: 20px;">🔔</div>
+</header>
+
+<div id="home-page" class="page active">
+<div class="welcome-box">
+<h2>ยินดีต้อนรับครับภู!</h2>
+<p style="font-size: 14px; color: var(--text-dim); margin-top: 10px;">นี่คือโครงสร้างใหม่ที่ชิดซ้ายและเป็นระเบียบที่สุด</p>
+</div>
+<div style="text-align: center; padding: 40px; opacity: 0.5;">
+<p>กำลังเตรียมโหลดข้อมูลจากระบบเดิม...</p>
+</div>
+</div>
+
+<nav class="nav-bar">
+<div class="nav-item active">🏠<br>หน้าหลัก</div>
+<div class="nav-item">💬<br>แชทสด</div>
+<div class="center-btn">+</div>
+<div class="nav-item">🔍<br>ค้นหา</div>
+<div class="nav-item">👤<br>โปรไฟล์</div>
+</nav>
+
+</body>
+</html>
