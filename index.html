@@ -115,17 +115,15 @@ cursor: pointer;
 <div style="font-size: 20px;">🔔</div>
 </header>
 
-<div id="home-page" class="page active">
     <div id="chat-page" class="page">
         <div style="display: flex; gap: 10px; align-items: center;">
-            <input type="text" id="chatInput" placeholder="พิมพ์ข้อความที่นี่..." style="flex: 1; padding: 12px 15px; border-radius: 25px; border: none; color: white; outline: none;">
-            <button class="send-btn">🚀</button>
+<button class="send-btn" onclick="sendMessage()">🚀</button>
             </div>
+<div id="home-page" class="page active">
         <div class="welcome-box" style="text-align: left;">
         <h3 style="color: var(--accent);">ห้องแชท MANBODTIP</h3>
         <p style="font-size: 12px; opacity: 0.7;">คุยสดๆ กับคนไทยในเกาหลี</p>
         </div>
-
         <div id="chat-display" style="height: 50vh; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 15px; padding: 15px; margin-bottom: 15px;">
         <div style="color: var(--text-dim); text-align: center; margin-top: 20px;">กำลังเชื่อมต่อสัญญาณ...</div>
         </div>
@@ -169,6 +167,22 @@ cursor: pointer;
     nav.classList.remove('active');
     });
     element.classList.add('active');
+    }
+    // ฟังก์ชันส่งข้อความแบบจำลอง
+    window.sendMessage = () => {
+    const input = document.getElementById('chatInput');
+    const display = document.getElementById('chat-display');
+
+    if(input.value.trim() !== "") {
+    // สร้างกล่องข้อความใหม่
+    const newMsg = `<div class="msg-bubble">${input.value}</div>`;
+    // เอาไปแปะในหน้าจอแสดงผล
+    display.insertAdjacentHTML('beforeend', newMsg);
+    // ล้างช่องพิมพ์
+    input.value = "";
+    // เลื่อนหน้าจอลงล่างสุด
+    display.scrollTop = display.scrollHeight;
+    }
     }
     </script>
 
