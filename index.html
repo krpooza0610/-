@@ -212,7 +212,20 @@ border-color: var(--accent);
             <p style="font-size: 14px; color: var(--text-dim);">ระดับความเท่: 999+</p>
         </div>
     </div>
-</div>    
+</div>
+<button onclick="toggleAdminNotes()" style="width: 100%; margin-top: 20px; background: rgba(255,215,0,0.1); color: var(--accent); border: 1px dashed var(--accent); padding: 15px; border-radius: 15px; cursor: pointer;">
+    📑 เปิดสมุดบันทึกแอดมิน
+    </button>
+
+    <div id="admin-notes-area" style="display: none; margin-top: 20px; text-align: left;">
+    <h4 style="color: var(--accent); margin-bottom: 10px;">บันทึกลับแอดมิน</h4>
+    <textarea id="adminNoteInput" placeholder="จดบันทึกไอเดียแอปที่นี่..." style="width: 100%; height: 150px; background: var(--bg-dark); color: white; border: 1px solid var(--primary); border-radius: 10px; padding: 10px; font-family: sans-serif; resize: none; outline: none;"></textarea>
+    <button onclick="saveAdminNote()" style="width: 100%; margin-top: 10px; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold;">💾 บันทึกลงฐานข้อมูล</button>
+
+    <div id="notes-list" style="margin-top: 20px; font-size: 13px; color: var(--text-dim);">
+    <p>กำลังโหลดบันทึก...</p>
+    </div>
+    </div>    
 <nav class="nav-bar">
     <div class="nav-item active" onclick="showPage('home-page', this)">🏠<br>หน้าหลัก</div>
 
@@ -304,6 +317,42 @@ border-color: var(--accent);
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     mBtn.addEventListener('touchend', () => {
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             setTimeout(() => { isDragging = false; }, 100);
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 });
+// สร้างทางเชื่อมไปเก็บข้อมูลบันทึก (แยกโฟลเดอร์จากแชท)
+const notesRef = ref(db, "admin_notes");
+
+// ฟังก์ชันเปิด-ปิด สมุดบันทึก
+window.toggleAdminNotes = () => {
+const area = document.getElementById('admin-notes-area');
+area.style.display = area.style.display === 'none' ? 'block' : 'none';
+};
+
+// ฟังก์ชันบันทึกโน้ตลง Firebase
+window.saveAdminNote = () => {
+const noteInput = document.getElementById('adminNoteInput');
+if(noteInput.value.trim() !== "") {
+push(notesRef, {
+content: noteInput.value,
+date: new Date().toLocaleString('th-TH')
+});
+noteInput.value = "";
+alert("บันทึกเรียบร้อยครับแอดมินภู!");
+}
+};
+
+// ระบบดึงโน้ตมาโชว์ (เฉพาะเครื่องแอดมิน)
+onChildAdded(notesRef, (snapshot) => {
+const data = snapshot.val();
+const list = document.getElementById('notes-list');
+if(list.innerHTML.includes("กำลังโหลด")) list.innerHTML = ""; // ล้างตัวหนังสือรอโหลด
+
+const noteItem = `
+<div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--accent);">
+<p style="color: white;">${data.content}</p>
+<small style="font-size: 10px; opacity: 0.5;">${data.date}</small>
+</div>
+`;
+list.insertAdjacentHTML('afterbegin', noteItem); // เอาบันทึกใหม่ไว้บนสุด
+});
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 </script>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
 </body>
