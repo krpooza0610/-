@@ -415,11 +415,57 @@ container.insertAdjacentHTML('afterbegin', html);
 });
 });
 
+window.filterFeed = (category) => {
+const container = document.getElementById('feed-container');
+onValue(postsRef, (snapshot) => {
+container.innerHTML = "";
+snapshot.forEach((childSnapshot) => {
+const post = childSnapshot.val();
+if (post.category === category) {
+const postId = childSnapshot.key;
+const html = `<div class="post-card">
+<small style="color: var(--accent);">${post.category}</small>
+<p style="margin: 10px 0;">${post.content}</p>
+<div class="post-action">
+<span onclick="likePost('${postId}')" style="cursor: pointer;">❤️ ${post.likes || 0}</span>
+<span onclick="toggleComments('${postId}')" style="cursor: pointer;">💬 คอมเมนต์</span>
+</div>
+<div id="comments-${postId}" style="display: none;" class="comment-box">
+<input type="text" id="comment-input-${postId}" placeholder="เขียนคอมเมนต์..." style="width: 70%; background: none; border: 1px solid var(--glass); color: white; border-radius: 10px; padding: 5px;">
+<button onclick="addComment('${postId}')" style="background: var(--primary); color: white; border: none; padding: 5px 10px; border-radius: 10px; font-size: 12px;">ส่ง</button>
+</div>
+</div>`;
+container.insertAdjacentHTML('afterbegin', html);
+}
+});
+});
+};
+        
+const myLikes = new Set(); 
 window.likePost = (id) => {
 const postLikeRef = ref(db, `posts/${id}/likes`);
 runTransaction(postLikeRef, (currentLikes) => {
+if (myLikes.has(id)) {
+myLikes.delete(id); 
+return (currentLikes || 1) - 1;
+} else {
+myLikes.add(id); 
 return (currentLikes || 0) + 1;
+}
 });
+};
+window.addComment = (postId) => {
+const input = document.getElementById(`comment-input-${postId}`);
+if (input.value.trim()) {
+const commentRef = ref(db, `posts/${postId}/comments`);
+push(commentRef, {
+author: "ภู",
+text: input.value,
+date: new Date().toLocaleString('th-TH')
+});
+input.value = "";
+alert("คอมเมนต์เรียบร้อย!");
+}
 };
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 </script>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
 </body>
