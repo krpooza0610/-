@@ -439,18 +439,23 @@ Object.values(post.comments).forEach((cmt) => {
 commentHtml += `<div style="font-size: 12px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 5px; margin-bottom: 5px; border-left: 2px solid var(--accent);"><b>${cmt.author}:</b> ${cmt.text}</div>`;
 });
 }
+// ตรงท่อนสร้างปุ่ม Action ของโพสต์
 const html = `<div class="post-card">
 <small style="color: var(--accent);">${post.category}</small>
-<p>${post.content}</p>
+<p style="margin: 10px 0;">${post.content}</p>
 <div class="post-action">
-<span onclick="likePost('${postId}')">❤️ ${post.likes || 0}</span>
-<span onclick="toggleComments('${postId}')">💬 คอมเมนต์</span>
+<span onclick="likePost('${postId}')" style="cursor: pointer;">❤️ ${post.likes || 0}</span>
+
+<span onclick="toggleComments('${postId}')" style="cursor: pointer;">
+💬 คอมเมนต์ ${post.comments ? '(' + Object.keys(post.comments).length + ')' : '(0)'}
+</span>
+
 </div>
 <div id="comments-${postId}" style="display: none; margin-top: 10px;">
 <div id="list-${postId}">${commentHtml}</div>
 <div style="display: flex; gap: 5px;">
-<input type="text" id="comment-input-${postId}" placeholder="คอมเมนต์..." style="flex: 1; background: rgba(255,255,255,0.1); color: white; border-radius: 10px; padding: 5px; border: 1px solid var(--glass);">
-<button onclick="addComment('${postId}')" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 5px 10px;">ส่ง</button>
+<input type="text" id="comment-input-${postId}" placeholder="เขียนคอมเมนต์..." style="flex: 1; background: none; border: 1px solid var(--glass); color: white; border-radius: 10px; padding: 8px;">
+<button onclick="addComment('${postId}')" style="background: var(--primary); color: white; border: none; padding: 5px 15px; border-radius: 10px;">ส่ง</button>
 </div>
 </div>
 </div>`;
