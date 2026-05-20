@@ -151,6 +151,25 @@ border-color: var(--accent);
                                                     from { transform: scale(1); filter: brightness(1); }
                                                         to { transform: scale(1.1); filter: brightness(1.5); }
                                                         }
+.post-card {
+    background: var(--glass);
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(255,255,255,0.1);
+    }
+    .post-action {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+    font-size: 14px;
+    color: var(--text-dim);
+    }
+    .comment-box {
+    margin-top: 10px;
+    padding-left: 15px;
+    border-left: 2px solid var(--primary);
+    }
 </style>
 </head>
 <body>
@@ -184,13 +203,23 @@ border-color: var(--accent);
 <button class="send-btn" onclick="sendMessage()">🚀</button>
 </div>
 </div> <div id="home-page" class="page active">
-<div class="welcome-box">
-<h2>ยินดีต้อนรับครับภู!</h2>
-<p style="font-size: 14px; color: var(--text-dim); margin-top: 10px;">นี่คือโครงสร้างใหม่ที่ชิดซ้ายและเป็นระเบียบที่สุด</p>
+<div style="display: flex; gap: 10px; margin-bottom: 20px;">
+<button onclick="filterFeed('หางาน')" style="flex: 1; padding: 10px; border-radius: 20px; border: none; background: var(--glass); color: white; cursor: pointer;">💼 หางาน</button>
+<button onclick="filterFeed('ทั่วไป')" style="flex: 1; padding: 10px; border-radius: 20px; border: none; background: var(--glass); color: white; cursor: pointer;">🌍 ทั่วไป</button>
 </div>
-<div style="text-align: center; padding: 40px; opacity: 0.5;">
-<p>กำลังเตรียมโหลดข้อมูลจากระบบเดิม...</p>
+
+<div class="welcome-box" style="padding: 15px; margin-bottom: 20px;">
+<textarea id="postInput" placeholder="วันนี้มีอะไรอัปเดตไหมครับภู..." style="width: 100%; background: transparent; border: none; color: white; outline: none; resize: none;"></textarea>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid var(--glass); padding-top: 10px;">
+<select id="postCategory" style="background: var(--bg-dark); color: white; border: 1px solid var(--glass); border-radius: 10px; padding: 5px;">
+<option value="ทั่วไป">ทั่วไป</option>
+<option value="หางาน">หางาน</option>
+</select>
+<button onclick="createPost()" style="background: var(--primary); color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold;">โพสต์</button>
 </div>
+</div>
+
+<div id="feed-container"></div>
 </div> <div id="profile-page" class="page">
 <div class="welcome-box" style="padding: 40px 20px;">
 <div style="width: 100px; height: 100px; background: var(--primary); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; border: 3px solid var(--accent); box-shadow: 0 0 20px var(--primary);">👤</div>
@@ -345,7 +374,53 @@ const noteItem = `
 `;
 list.insertAdjacentHTML('afterbegin', noteItem); // เอาบันทึกใหม่ไว้บนสุด
 });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </script>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+const postsRef = ref(db, "posts");
+
+// ฟังก์ชันสร้างโพสต์
+window.createPost = () => {
+const content = document.getElementById('postInput').value;
+const category = document.getElementById('postCategory').value;
+if(content.trim()) {
+push(postsRef, {
+author: "ADMIN", // หรือใช้ชื่อภู
+content: content,
+category: category,
+likes: 0,
+date: new Date().toLocaleString('th-TH')
+});
+document.getElementById('postInput').value = "";
+}
+};
+
+// ดึงโพสต์มาโชว์
+onValue(postsRef, (snapshot) => {
+const container = document.getElementById('feed-container');
+container.innerHTML = "";
+snapshot.forEach((childSnapshot) => {
+const post = childSnapshot.val();
+const postId = childSnapshot.key;
+const html = `
+<div class="post-card">
+<small style="color: var(--accent);">${post.category}</small>
+<p style="margin: 10px 0;">${post.content}</p>
+<div class="post-action">
+<span onclick="likePost('${postId}')" style="cursor: pointer;">❤️ ${post.likes || 0}</span>
+<span onclick="toggleComments('${postId}')" style="cursor: pointer;">💬 คอมเมนต์</span>
+</div>
+<div id="comments-${postId}" style="display: none;" class="comment-box">
+<input type="text" placeholder="เขียนคอมเมนต์..." style="width: 80%; background: none; border: 1px solid var(--glass); color: white; border-radius: 10px; padding: 5px;">
+</div>
+</div>`;
+container.insertAdjacentHTML('afterbegin', html);
+});
+});
+
+window.likePost = (id) => {
+const postLikeRef = ref(db, `posts/${id}/likes`);
+runTransaction(postLikeRef, (currentLikes) => {
+return (currentLikes || 0) + 1;
+});
+};
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </script>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
 </body>
 </html>
