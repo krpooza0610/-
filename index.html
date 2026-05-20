@@ -259,8 +259,8 @@ border-color: var(--accent);
     
 <script type="module"> // ต้องใส่ type="module" เพื่อให้ใช้ import ได้
     // 1. นำเข้า Library ของ Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-            import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
                 // 2. กุญแจ Firebase ของภู (ใส่ให้ครบตามนี้)
                     const firebaseConfig = {
