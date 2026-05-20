@@ -402,43 +402,6 @@ const postId = childSnapshot.key;
 let commentHtml = "";
 if (post.comments) {
 Object.values(post.comments).forEach((cmt) => {
-commentHtml += `<div style="font-size: 12px; background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 8px; margin-bottom: 5px;">
-<b style="color: var(--accent);">${cmt.author}:</b> ${cmt.text}
-</div>`;
-});
-}
-const html = `<div class="post-card">
-<small style="color: var(--accent);">${post.category}</small>
-<p style="margin: 10px 0;">${post.content}</p>
-<div class="post-action">
-<span onclick="likePost('${postId}')" style="cursor: pointer;">❤️ ${post.likes || 0}</span>
-<span onclick="toggleComments('${postId}')" style="cursor: pointer;">💬 คอมเมนต์</span>
-</div>
-<div id="comments-${postId}" style="display: none; margin-top: 10px;" class="comment-box">
-<div id="list-${postId}" style="margin-bottom: 10px;">${commentHtml}</div>
-<div style="display: flex; gap: 5px;">
-<input type="text" id="comment-input-${postId}" placeholder="เขียนคอมเมนต์..." style="flex: 1; background: none; border: 1px solid var(--glass); color: white; border-radius: 10px; padding: 8px;">
-<button onclick="addComment('${postId}')" style="background: var(--primary); color: white; border: none; padding: 5px 15px; border-radius: 10px; font-weight: bold;">ส่ง</button>
-</div>
-</div>
-</div>`;
-container.insertAdjacentHTML('afterbegin', html);
-});
-});
-
-window.filterFeed = (category) => {
-const container = document.getElementById('feed-container');
-// ดึงโพสต์มาโชว์ (ฉบับโชว์คอมเมนต์ทันที)
-onValue(postsRef, (snapshot) => {
-const container = document.getElementById('feed-container');
-container.innerHTML = "";
-snapshot.forEach((childSnapshot) => {
-const post = childSnapshot.val();
-const postId = childSnapshot.key;
-let commentHtml = "";
-// ถ้ามีคอมเมนต์ ให้วนลูปสร้าง HTML มาเก็บไว้
-if (post.comments) {
-Object.values(post.comments).reverse().forEach((cmt) => {
 commentHtml += `<div style="font-size: 12px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; margin-bottom: 5px; border-left: 2px solid var(--accent);">
 <b style="color: var(--accent); font-size: 10px;">${cmt.author}</b><br>${cmt.text}
 </div>`;
@@ -462,6 +425,41 @@ const html = `<div class="post-card">
 container.insertAdjacentHTML('afterbegin', html);
 });
 });
+
+window.filterFeed = (category) => {
+const container = document.getElementById('feed-container');
+onValue(postsRef, (snapshot) => {
+container.innerHTML = "";
+snapshot.forEach((childSnapshot) => {
+const post = childSnapshot.val();
+if (post.category === category) {
+const postId = childSnapshot.key;
+let commentHtml = "";
+if (post.comments) {
+Object.values(post.comments).forEach((cmt) => {
+commentHtml += `<div style="font-size: 12px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 5px; margin-bottom: 5px; border-left: 2px solid var(--accent);"><b>${cmt.author}:</b> ${cmt.text}</div>`;
+});
+}
+const html = `<div class="post-card">
+<small style="color: var(--accent);">${post.category}</small>
+<p>${post.content}</p>
+<div class="post-action">
+<span onclick="likePost('${postId}')">❤️ ${post.likes || 0}</span>
+<span onclick="toggleComments('${postId}')">💬 คอมเมนต์</span>
+</div>
+<div id="comments-${postId}" style="display: none; margin-top: 10px;">
+<div id="list-${postId}">${commentHtml}</div>
+<div style="display: flex; gap: 5px;">
+<input type="text" id="comment-input-${postId}" placeholder="คอมเมนต์..." style="flex: 1; background: rgba(255,255,255,0.1); color: white; border-radius: 10px; padding: 5px; border: 1px solid var(--glass);">
+<button onclick="addComment('${postId}')" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 5px 10px;">ส่ง</button>
+</div>
+</div>
+</div>`;
+container.insertAdjacentHTML('afterbegin', html);
+}
+});
+});
+};
         
 const myLikes = new Set(); 
 window.likePost = (id) => {
