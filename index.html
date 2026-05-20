@@ -399,10 +399,9 @@ container.innerHTML = "";
 snapshot.forEach((childSnapshot) => {
 const post = childSnapshot.val();
 const postId = childSnapshot.key;
-// ดึงข้อมูลคอมเมนต์ถ้ามี
 let commentHtml = "";
 if (post.comments) {
-Object.values(post.comments).forEach(cmt => {
+Object.values(post.comments).forEach((cmt) => {
 commentHtml += `<div style="font-size: 12px; background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 8px; margin-bottom: 5px;">
 <b style="color: var(--accent);">${cmt.author}:</b> ${cmt.text}
 </div>`;
@@ -477,6 +476,12 @@ date: new Date().toLocaleString('th-TH')
 });
 input.value = "";
 alert("คอมเมนต์เรียบร้อย!");
+}
+};
+window.toggleComments = (id) => {
+const area = document.getElementById(`comments-${id}`);
+if (area) {
+area.style.display = area.style.display === 'none' ? 'block' : 'none';
 }
 };
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 </script>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
