@@ -172,48 +172,41 @@ border-color: var(--accent);
 </header>
 
 <div id="chat-page" class="page">
-    <div class="welcome-box" style="text-align: left;">
-    <h3 style="color: var(--accent);">ห้องแชท MANBODTIP</h3>
-    <p style="font-size: 12px; opacity: 0.7;">คุยสดๆ กับคนไทยในเกาหลี</p>
-    </div>
-
-    <div id="chat-display" style="height: 50vh; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 15px; padding: 15px; margin-bottom: 15px;">
-    <div style="color: var(--text-dim); text-align: center; margin-top: 20px;">กำลังเชื่อมต่อสัญญาณ...</div>
-    </div>
-
-    <div style="display: flex; gap: 10px; align-items: center;">
-    <input type="text" id="chatInput" placeholder="พิมพ์ข้อความที่นี่..." style="flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid var(--glass); background: var(--glass); color: white; outline: none;">
-    <button class="send-btn" onclick="sendMessage()">🚀</button>
-    </div>
-</div> </div> <div id="home-page" class="page active">
-        <div class="welcome-box">
-                <h2>ยินดีต้อนรับครับภู!</h2>
-                        <p style="font-size: 14px; color: var(--text-dim); margin-top: 10px;">นี่คือโครงสร้างใหม่ที่ชิดซ้ายและเป็นระเบียบที่สุด</p>
-                            </div>
-                                <div style="text-align: center; padding: 40px; opacity: 0.5;">
-                                        <p>กำลังเตรียมโหลดข้อมูลจากระบบเดิม...</p>
-                                            </div>
-                                            </div> </div> <div id="profile-page" class="page">
-    <div class="welcome-box" style="padding: 40px 20px;">
-        <div style="width: 100px; height: 100px; background: var(--primary); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; border: 3px solid var(--accent); box-shadow: 0 0 20px var(--primary);">
-            👤
-        </div>
-        
-        <h2 style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-            ADMIN 
-            <span class="admin-badge">✔</span>
-        </h2>
-        
-        <p style="color: var(--accent); margin-top: 5px; font-weight: bold;">No.1 เรื่องกิน 🤤</p>
-        
-        <div style="margin-top: 30px; text-align: left; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px;">
-            <p style="font-size: 14px; color: var(--text-dim);">สถานะ: แอดมินสูงสุด</p>
-            <p style="font-size: 14px; color: var(--text-dim);">ระดับความเท่: 999+</p>
-        </div>
-    </div>
+<div class="welcome-box" style="text-align: left;">
+<h3 style="color: var(--accent);">ห้องแชท MANBODTIP</h3>
+<p style="font-size: 12px; opacity: 0.7;">คุยสดๆ กับคนไทยในเกาหลี</p>
 </div>
-<button onclick="toggleAdminNotes()" style="width: 100%; margin-top: 20px; background: rgba(255,215,0,0.1); color: var(--accent); border: 1px dashed var(--accent); padding: 15px; border-radius: 15px; cursor: pointer;">
-    📑 เปิดสมุดบันทึกแอดมิน
+<div id="chat-display" style="height: 50vh; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 15px; padding: 15px; margin-bottom: 15px;">
+<div style="color: var(--text-dim); text-align: center; margin-top: 20px;">กำลังเชื่อมต่อสัญญาณ...</div>
+</div>
+<div style="display: flex; gap: 10px; align-items: center;">
+<input type="text" id="chatInput" placeholder="พิมพ์ข้อความที่นี่..." style="flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid var(--glass); background: var(--glass); color: white; outline: none;">
+<button class="send-btn" onclick="sendMessage()">🚀</button>
+</div>
+</div> <div id="home-page" class="page active">
+<div class="welcome-box">
+<h2>ยินดีต้อนรับครับภู!</h2>
+<p style="font-size: 14px; color: var(--text-dim); margin-top: 10px;">นี่คือโครงสร้างใหม่ที่ชิดซ้ายและเป็นระเบียบที่สุด</p>
+</div>
+<div style="text-align: center; padding: 40px; opacity: 0.5;">
+<p>กำลังเตรียมโหลดข้อมูลจากระบบเดิม...</p>
+</div>
+</div> <div id="profile-page" class="page">
+<div class="welcome-box" style="padding: 40px 20px;">
+<div style="width: 100px; height: 100px; background: var(--primary); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; border: 3px solid var(--accent); box-shadow: 0 0 20px var(--primary);">👤</div>
+<h2 style="display: flex; align-items: center; justify-content: center; gap: 8px;">ADMIN <span class="admin-badge">✔</span></h2>
+<p style="color: var(--accent); margin-top: 5px; font-weight: bold;">No.1 เรื่องกิน 🤤</p>
+
+<button onclick="toggleAdminNotes()" style="width: 100%; margin-top: 20px; background: rgba(255,215,0,0.1); color: var(--accent); border: 1px dashed var(--accent); padding: 15px; border-radius: 15px; cursor: pointer;">📑 เปิดสมุดบันทึกแอดมิน</button>
+
+<div id="admin-notes-area" style="display: none; margin-top: 20px; text-align: left;">
+<h4 style="color: var(--accent); margin-bottom: 10px;">บันทึกลับแอดมิน</h4>
+<textarea id="adminNoteInput" placeholder="จดบันทึกไอเดียแอป..." style="width: 100%; height: 120px; background: var(--bg-dark); color: white; border: 1px solid var(--primary); border-radius: 10px; padding: 10px; width: 100%; outline: none;"></textarea>
+<button onclick="saveAdminNote()" style="width: 100%; margin-top: 10px; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; width: 100%;">💾 บันทึก</button>
+<div id="notes-list" style="margin-top: 20px; font-size: 13px; color: var(--text-dim);"><p>กำลังโหลด...</p></div>
+</div>
+
+</div> </div>
     </button>
 
     <div id="admin-notes-area" style="display: none; margin-top: 20px; text-align: left;">
