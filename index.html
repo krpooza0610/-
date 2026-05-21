@@ -208,14 +208,23 @@ border-color: var(--accent);
 <button onclick="filterFeed('ทั่วไป')" style="flex: 1; padding: 10px; border-radius: 20px; border: none; background: var(--glass); color: white; cursor: pointer;">🌍 ทั่วไป</button>
 </div>
 
-<div class="welcome-box" style="padding: 15px; margin-bottom: 20px;">
-<textarea id="postInput" placeholder="วันนี้มีอะไรอัปเดตไหมครับภู..." style="width: 100%; background: transparent; border: none; color: white; outline: none; resize: none;"></textarea>
-<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid var(--glass); padding-top: 10px;">
+<<div class="welcome-box" style="padding: 15px; margin-bottom: 20px;">
+<textarea id="postInput" placeholder="มีรูปสวยๆ อยากอวดไหมครับภู..." style="width: 100%; background: transparent; border: none; color: white; outline: none; resize: none;"></textarea>
+
+<div style="margin: 10px 0;">
+<label for="imageInput" style="cursor: pointer; background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 10px; font-size: 13px; display: inline-block; border: 1px dashed var(--accent);">🖼️ เลือกรูปภาพ</label>
+<input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="previewImage(event)">
+<div id="imagePreview" style="margin-top: 10px; display: none;">
+<img id="previewImg" src="" style="width: 100%; border-radius: 10px; max-height: 200px; object-fit: cover; border: 1px solid var(--primary);">
+</div>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--glass); padding-top: 10px;">
 <select id="postCategory" style="background: var(--bg-dark); color: white; border: 1px solid var(--glass); border-radius: 10px; padding: 5px;">
 <option value="ทั่วไป">ทั่วไป</option>
 <option value="หางาน">หางาน</option>
 </select>
-<button onclick="createPost()" style="background: var(--primary); color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold;">โพสต์</button>
+<button onclick="uploadAndPost()" id="uploadBtn" style="background: var(--primary); color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold;">โพสต์</button>
 </div>
 </div>
 
@@ -377,19 +386,47 @@ list.insertAdjacentHTML('afterbegin', noteItem); // เอาบันทึก�
 const postsRef = ref(db, "posts");
 
 // ฟังก์ชันสร้างโพสต์
-window.createPost = () => {
+// --- วางโค้ดที่ภูส่งมาตรงนี้ ---
+window.previewImage = (event) => {
+const reader = new FileReader();
+reader.onload = () => {
+const output = document.getElementById('previewImg');
+output.src = reader.result;
+document.getElementById('imagePreview').style.display = 'block';
+};
+reader.readAsDataURL(event.target.files[0]);
+};
+
+window.uploadAndPost = async () => {
 const content = document.getElementById('postInput').value;
 const category = document.getElementById('postCategory').value;
-if(content.trim()) {
+const fileInput = document.getElementById('imageInput');
+const file = fileInput.files[0];
+const btn = document.getElementById('uploadBtn');
+if (!content.trim() && !file) return;
+btn.disabled = true;
+btn.innerText = "กำลังประมวลผล...";
+let base64Image = "";
+if (file) {
+const reader = new FileReader();
+base64Image = await new Promise((resolve) => {
+reader.onload = () => resolve(reader.result);
+reader.readAsDataURL(file);
+});
+}
 push(postsRef, {
-author: "ADMIN", // หรือใช้ชื่อภู
+author: "ภู", // เปลี่ยนเป็นชื่อภูได้เลย
 content: content,
 category: category,
+image: base64Image,
 likes: 0,
 date: new Date().toLocaleString('th-TH')
 });
 document.getElementById('postInput').value = "";
-}
+fileInput.value = "";
+document.getElementById('imagePreview').style.display = 'none';
+btn.disabled = false;
+btn.innerText = "โพสต์";
 };
 
 // 1. ดึงโพสต์มาโชว์ (อันเดียวจบ)
@@ -409,6 +446,7 @@ commentHtml += `<div style="font-size: 12px; background: rgba(255,255,255,0.05);
 const html = `<div class="post-card">
 <small style="color: var(--accent);">${post.category}</small>
 <p style="margin: 10px 0;">${post.content}</p>
+${post.image ? `<img src="${post.image}" style="width: 100%; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1);">` : ""}
 <div class="post-action">
 <span onclick="likePost('${postId}')" style="cursor: pointer;">❤️ ${post.likes || 0}</span>
 <span onclick="toggleComments('${postId}')" style="cursor: pointer;">💬 คอมเมนต์</span>
