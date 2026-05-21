@@ -208,15 +208,19 @@ border-color: var(--accent);
 <button onclick="filterFeed('ทั่วไป')" style="flex: 1; padding: 10px; border-radius: 20px; border: none; background: var(--glass); color: white; cursor: pointer;">🌍 ทั่วไป</button>
 </div>
 
-<<div class="welcome-box" style="padding: 15px; margin-bottom: 20px;">
+<div class="welcome-box" style="padding: 15px; margin-bottom: 20px;">
 <textarea id="postInput" placeholder="มีรูปสวยๆ อยากอวดไหมครับภู..." style="width: 100%; background: transparent; border: none; color: white; outline: none; resize: none;"></textarea>
 
-<div style="margin: 10px 0;">
-<label for="imageInput" style="cursor: pointer; background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 10px; font-size: 13px; display: inline-block; border: 1px dashed var(--accent);">🖼️ เลือกรูปภาพ</label>
+<div style="margin: 10px 0; display: flex; align-items: center; gap: 10px;">
+<label for="imageInput" style="cursor: pointer; width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid var(--glass); font-size: 20px; transition: 0.3s;">
+<span style="color: var(--accent);">+</span>
+</label>
 <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="previewImage(event)">
-<div id="imagePreview" style="margin-top: 10px; display: none;">
-<img id="previewImg" src="" style="width: 100%; border-radius: 10px; max-height: 200px; object-fit: cover; border: 1px solid var(--primary);">
+<small id="file-name" style="color: rgba(255,255,255,0.5); font-size: 11px;">ยังไม่ได้เลือกรูป</small>
 </div>
+<div id="imagePreview" style="margin-top: 10px; display: none; position: relative;">
+<img id="previewImg" src="" style="width: 100%; border-radius: 12px; max-height: 200px; object-fit: cover; border: 1px solid var(--primary);">
+<div onclick="cancelImage()" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; width: 20px; height: 20px; border-radius: 50%; text-align: center; cursor: pointer; line-height: 18px;">×</div>
 </div>
 
 <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--glass); padding-top: 10px;">
@@ -388,6 +392,8 @@ const postsRef = ref(db, "posts");
 // ฟังก์ชันสร้างโพสต์
 // --- วางโค้ดที่ภูส่งมาตรงนี้ ---
 window.previewImage = (event) => {
+if(event.target.files[0]) {
+document.getElementById('file-name').innerText = "เลือกรูปแล้ว: " + event.target.files[0].name;
 const reader = new FileReader();
 reader.onload = () => {
 const output = document.getElementById('previewImg');
@@ -474,25 +480,23 @@ const postId = childSnapshot.key;
 let commentHtml = "";
 if (post.comments) {
 Object.values(post.comments).forEach((cmt) => {
-commentHtml += `<div style="font-size: 12px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 5px; margin-bottom: 5px; border-left: 2px solid var(--accent);"><b>${cmt.author}:</b> ${cmt.text}</div>`;
+commentHtml += `<div style="font-size: 12px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 5px; margin-bottom: 5px;"><b>${cmt.author}:</b> ${cmt.text}</div>`;
 });
 }
-// ตรงท่อนสร้างปุ่ม Action ของโพสต์
 const html = `<div class="post-card">
 <small style="color: var(--accent);">${post.category}</small>
 <p style="margin: 10px 0;">${post.content}</p>
+
+${post.image ? `<img src="${post.image}" style="width: 100%; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1);">` : ""}
+
 <div class="post-action">
 <span onclick="likePost('${postId}')" style="cursor: pointer;">❤️ ${post.likes || 0}</span>
-
-<span onclick="toggleComments('${postId}')" style="cursor: pointer;">
-💬 คอมเมนต์ ${post.comments ? '(' + Object.keys(post.comments).length + ')' : '(0)'}
-</span>
-
+<span onclick="toggleComments('${postId}')" style="cursor: pointer;">💬 คอมเมนต์ ${post.comments ? '(' + Object.keys(post.comments).length + ')' : '(0)'}</span>
 </div>
 <div id="comments-${postId}" style="display: none; margin-top: 10px;">
 <div id="list-${postId}">${commentHtml}</div>
 <div style="display: flex; gap: 5px;">
-<input type="text" id="comment-input-${postId}" placeholder="เขียนคอมเมนต์..." style="flex: 1; background: none; border: 1px solid var(--glass); color: white; border-radius: 10px; padding: 8px;">
+<input type="text" id="comment-input-${postId}" placeholder="คอมเมนต์..." style="flex: 1; background: none; border: 1px solid var(--glass); color: white; border-radius: 10px; padding: 8px;">
 <button onclick="addComment('${postId}')" style="background: var(--primary); color: white; border: none; padding: 5px 15px; border-radius: 10px;">ส่ง</button>
 </div>
 </div>
@@ -535,7 +539,12 @@ if (area) {
 area.style.display = area.style.display === 'none' ? 'block' : 'none';
 }
 };
-// ปิดท้ายสคริปต์ให้สนิท
+        window.cancelImage = () => {
+document.getElementById('imageInput').value = "";
+document.getElementById('imagePreview').style.display = 'none';
+document.getElementById('file-name').innerText = "ยังไม่ได้เลือกรูป";
+}
+};
 </script>
 </body>
 </html>
