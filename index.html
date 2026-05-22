@@ -511,6 +511,12 @@ return (currentLikes || 1) - 1;
 myLikes.add(id); 
 return (currentLikes || 0) + 1;
 }
+}).then(() => {
+// เพิ่มส่วนนี้: ถ้ากดไลก์ตอนอยู่หน้าเต็มจอ ให้สั่งเปิดหน้าเดิมซ้ำเพื่ออัปเดตตัวเลข
+const detailPage = document.getElementById('post-detail-page');
+if (detailPage && detailPage.classList.contains('active')) {
+openPostDetail(id);
+}
 });
 };
 
