@@ -630,7 +630,6 @@ document.getElementById('detail-category').innerText = post.category;
 document.getElementById('detail-content-area').innerHTML = `
 <div class="post-card" style="background: none; border: none; padding: 0;">
 <p style="font-size: 18px; margin-bottom: 15px; line-height: 1.6;">${post.content}</p>
-// แก้ไขบรรทัดที่แสดงรูปภาพในโพสต์
 ${post.image ? `<img src="${post.image}" onclick="viewPhoto('${post.image}')" style="width: 100%; border-radius: 10px; margin-top: 10px; cursor: pointer;">` : ""}
 <div style="display: flex; gap: 20px; border-bottom: 1px solid var(--glass); padding-bottom: 15px; margin-bottom: 20px;">
 <span onclick="likePost('${postId}')" style="font-size: 16px; cursor: pointer;">❤️ ${post.likes || 0} ไลก์</span>
