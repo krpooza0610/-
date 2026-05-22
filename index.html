@@ -559,6 +559,23 @@ openPostDetail(id);
 });
 };
 
+const myCommentLikes = new Set();
+window.likeComment = (postId, commentId) => {
+const commentLikeRef = ref(db, `posts/${postId}/comments/${commentId}/likes`);
+const uniqueKey = postId + commentId;
+runTransaction(commentLikeRef, (currentLikes) => {
+if (myCommentLikes.has(uniqueKey)) {
+myCommentLikes.delete(uniqueKey);
+return (currentLikes || 1) - 1;
+} else {
+myCommentLikes.add(uniqueKey);
+return (currentLikes || 0) + 1;
+}
+}).then(() => {
+openPostDetail(postId);
+});
+};
+        
 window.toggleComments = (id) => {
 const area = document.getElementById(`comments-${id}`);
 if (area) area.style.display = area.style.display === 'none' ? 'block' : 'none';
@@ -577,12 +594,19 @@ onValue(postRef, (snapshot) => {
 const post = snapshot.val();
 if (!post) return;
 showPage('post-detail-page');
+// ส่วนหนึ่งในฟังก์ชัน openPostDetail
 let commentHtml = "";
 if (post.comments) {
-Object.values(post.comments).forEach((cmt) => {
-commentHtml += `<div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 10px; border-left: 3px solid var(--primary);">
-<div style="font-weight: bold; color: var(--accent); font-size: 13px; margin-bottom: 5px;">${cmt.author}</div>
-<div style="font-size: 14px;">${cmt.text}</div>
+Object.entries(post.comments).forEach(([commentId, cmt]) => {
+commentHtml += `
+<div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 10px; border-left: 3px solid var(--primary);">
+<div style="display: flex; justify-content: space-between; align-items: center;">
+<div style="font-weight: bold; color: var(--accent); font-size: 13px;">${cmt.author}</div>
+<div onclick="likeComment('${postId}', '${commentId}')" style="cursor: pointer; font-size: 12px; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 15px;">
+❤️ ${cmt.likes || 0}
+</div>
+</div>
+<div style="font-size: 14px; margin-top: 5px;">${cmt.text}</div>
 </div>`;
 });
 }
@@ -612,6 +636,7 @@ const commentRef = ref(db, `posts/${postId}/comments`);
 push(commentRef, {
 author: "ภู",
 text: input.value,
+likes: 0,
 date: new Date().toLocaleString('th-TH')
 });
 input.value = "";
