@@ -853,11 +853,13 @@ const auth = getAuth();
 const googleProvider = new GoogleAuthProvider();
 const ADMIN_EMAIL = "krpooza0610@gmail.com";
 
-onAuthStateChanged(auth, (user) => {
+// ตรวจสอบสถานะการล็อคอิน
+onAuthStateChanged(auth, async (user) => {
 const loginOverlay = document.getElementById('login-overlay');
 if (user) {
 loginOverlay.style.display = 'none';
-updateProfileUI(user);
+// ต้องใส่ await เพราะเป็นฟังก์ชันดึงข้อมูลจาก Database ครับ
+await updateProfileUI(user);
 } else {
 loginOverlay.style.display = 'flex';
 }
@@ -877,23 +879,24 @@ signOut(auth).then(() => location.reload());
 
 window.updateProfileUI = async (user) => {
 const profilePage = document.getElementById('profile-page');
-const isAdmin = user.email === ADMIN_EMAIL;
+if (!profilePage) return; // กัน Error ถ้าหน้ายังไม่โหลด
 
-// --- ดึงรูปจาก Database แทน ---
-const userRef = ref(db, 'users/' + user.uid);
-let photoURL = "https://cdn-icons-png.flaticon.com/512/149/149071.png"; // รูปเริ่มต้น
+const isAdmin = user.email === ADMIN_EMAIL;
+let photoURL = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
 try {
-const snapshot = await get(userRef);
-if (snapshot.exists() && snapshot.val().profilePic) {
-photoURL = snapshot.val().profilePic;
+// ดึงรูปจาก Database มาเช็ก
+const snapshot = await get(ref(db, 'users/' + user.uid + '/profilePic'));
+if (snapshot.exists()) {
+photoURL = snapshot.val();
 } else {
 photoURL = user.photoURL || photoURL;
 }
-} catch (e) { console.log(e); }
+} catch (e) {
+console.error("ดึงรูปพลาด:", e);
+}
 
 const displayName = user.displayName || "นักอ่านนิรนาม";
-// ... (โค้ด HTML ด้านล่างเหมือนเดิมเลยครับ)
 
 profilePage.innerHTML = `
 <div class="welcome-box" style="margin-top: 20px;">
@@ -949,11 +952,10 @@ const compressedData = canvas.toDataURL('image/jpeg', 0.6);
 const user = auth.currentUser;
 
 try {
-// ใช้ set บันทึกลง database ตรงๆ เลยครับ
+// บันทึกลง database ตรงๆ
 await set(ref(db, 'users/' + user.uid + '/profilePic'), compressedData);
-
 document.getElementById('user-avatar').src = compressedData;
-alert("รอบนี้ผ่านของจริงครับภู! เพราะ import 'set' มาแล้ว");
+alert("เปลี่ยนรูปสำเร็จครับภู!");
 } catch (error) {
 alert("Database Error: " + error.message);
 }
