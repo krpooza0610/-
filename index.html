@@ -53,10 +53,15 @@ font-size: 18px; /* ย่อตัวหนังสือ */
 display: none; /* ซ่อนสโลแกนและกระดิ่งตอนย่อเพื่อความมินิมอล */
 }
 
-/* ระยะห่างจากด้านบน เพื่อไม่ให้ Header บังเนื้อหา */
-#home-page, .page {
-padding-top: 100px; /* เว้นระยะจาก Header ปกติ */
-padding-bottom: 100px; /* เว้นระยะจากเมนูล่าง */
+/* บังคับระยะห่างด้านบนให้ทุกหน้า เพื่อไม่ให้โดน Header บัง */
+#home-page, 
+#chat-page, 
+#search-page, 
+#profile-page, 
+.page {
+    padding-top: 110px !important; /* เพิ่มระยะให้พ้น Header ตอนขยายเต็มที่ */
+    padding-bottom: 100px !important;
+    min-height: 100vh;
 }
 .logo-zone b { font-size: 20px; display: block; background: linear-gradient(to right, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .logo-zone span { font-size: 11px; color: var(--text-dim); }
