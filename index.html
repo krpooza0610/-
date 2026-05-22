@@ -265,7 +265,7 @@ border-color: var(--accent);
 
     <div class="nav-item" onclick="showPage('chat-page', this)">💬<br>แชทสด</div>
 
-    <div class="center-btn">+</div>
+<div class="nav-item plus-btn" onclick="quickPost()">+</div>
     <div class="nav-item">🔍<br>ค้นหา</div>
 <div class="nav-item" onclick="showPage('profile-page', this)">👤<br>โปรไฟล์</div>
     </nav>
@@ -577,6 +577,30 @@ date: new Date().toLocaleString('th-TH')
 });
 input.value = "";
 openPostDetail(postId);
+}
+};
+        window.quickPost = () => {
+// 1. สั่งให้กลับไปหน้า Home ก่อน
+showPage('home-page');
+
+// 2. หาช่องพิมพ์ข้อความ
+const postInput = document.getElementById('postInput');
+
+if (postInput) {
+// 3. เลื่อนหน้าจอขึ้นไปบนสุดเพื่อให้เห็นช่องโพสต์ชัดๆ
+window.scrollTo({ top: 0, behavior: 'smooth' });
+
+// 4. สั่งให้เคอร์เซอร์ไปกะพริบที่ช่องพิมพ์ (Focus)
+setTimeout(() => {
+postInput.focus();
+}, 300); // รอให้หน้าสลับเสร็จแป๊บนึงค่อยโฟกัส
+
+        // เพิ่มลูกเล่นให้ช่องโพสต์ดูเด่นขึ้น
+postInput.style.transition = "0.5s";
+postInput.style.background = "rgba(255, 215, 0, 0.2)"; // สีทองจางๆ
+setTimeout(() => {
+postInput.style.background = "transparent"; // กลับเป็นสีเดิม
+}, 1000);
 }
 };
 </script>
