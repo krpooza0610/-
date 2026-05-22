@@ -286,13 +286,26 @@ transform: scale(0.9); /* จิ้มแล้วมียุบตัวนิ
     <p>กำลังโหลดบันทึก...</p>
     </div>
     </div>    
+
+<div id="search-page" class="page" style="padding: 15px;">
+<div class="welcome-box">
+<h3 style="color: var(--accent); margin-bottom: 15px;">🔍 ค้นหาโพสต์</h3>
+<div style="display: flex; gap: 10px;">
+<input type="text" id="searchInput" placeholder="พิมพ์คำที่ต้องการค้นหา..." style="flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid var(--glass); background: var(--glass); color: white; outline: none;">
+<button onclick="startSearch()" style="background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">🔎</button>
+</div>
+</div>
+<div id="search-results">
+<p style="text-align: center; color: var(--text-dim); margin-top: 20px;">ระบุคำค้นหาเพื่อเริ่มดูผลลัพธ์</p>
+</div>
+</div>
 <nav class="nav-bar">
     <div class="nav-item active" onclick="showPage('home-page', this)">🏠<br>หน้าหลัก</div>
     <div class="nav-item" onclick="showPage('chat-page', this)">💬<br>แชทสด</div>
     
     <div class="center-btn" onclick="quickPost()">+</div>
     
-    <div class="nav-item">🔍<br>ค้นหา</div>
+<div class="nav-item" onclick="showPage('search-page', this)">🔍<br>ค้นหา</div>
     <div class="nav-item" onclick="showPage('profile-page', this)">👤<br>โปรไฟล์</div>
 </nav>
 
@@ -629,6 +642,48 @@ postInput.style.background = "transparent"; // กลับเป็นสีเ
 }, 1000);
 }
 };
+
+window.startSearch = () => {
+const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+const resultsContainer = document.getElementById('search-results');
+if (!keyword) return;
+
+resultsContainer.innerHTML = '<p style="text-align: center; margin-top: 20px;">กำลังค้นหา...</p>';
+
+onValue(postsRef, (snapshot) => {
+resultsContainer.innerHTML = "";
+let found = false;
+
+snapshot.forEach((childSnapshot) => {
+const post = childSnapshot.val();
+const postId = childSnapshot.key;
+
+// เช็กว่าคำค้นหาอยู่ในเนื้อหาโพสต์ หรือหมวดหมู่ไหม
+if (post.content.toLowerCase().includes(keyword) || post.category.toLowerCase().includes(keyword)) {
+found = true;
+const html = `<div class="post-card" onclick="openPostDetail('${postId}')" style="cursor: pointer;">
+<small style="color: var(--accent);">${post.category}</small>
+<p style="margin: 10px 0;">${post.content}</p>
+${post.image ? `<img src="${post.image}" style="width: 100%; border-radius: 10px; margin-top: 10px;">` : ""}
+<div class="post-action">
+<span>❤️ ${post.likes || 0}</span>
+<span>💬 ${post.comments ? Object.keys(post.comments).length : 0} คอมเมนต์</span>
+</div>
+</div>`;
+resultsContainer.insertAdjacentHTML('afterbegin', html);
+}
+});
+
+if (!found) {
+resultsContainer.innerHTML = '<p style="text-align: center; color: var(--text-dim); margin-top: 20px;">ไม่พบโพสต์ที่เกี่ยวข้องกับ "' + keyword + '"</p>';
+}
+}, { onlyOnce: true });
+};
+        
+// พิมพ์แล้วค้นหาทันทีไม่ต้องกดปุ่ม
+document.getElementById('searchInput')?.addEventListener('input', () => {
+startSearch();
+});
 </script>
 </body>
 </html>
