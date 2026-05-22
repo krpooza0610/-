@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Thai in Korea V2</title>
+<title>MANBODTIP</title>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&display=swap" rel="stylesheet">
 <style>
 /* --- 1. ตั้งค่าสีและรากฐาน (Theme Setup) --- */
@@ -916,9 +916,10 @@ window.handlePhotoChange = async (event) => {
 const file = event.target.files[0];
 if (!file) return;
 
-// เช็กขนาดไฟล์ (เจมส์ลดเหลือ 1MB เพื่อให้ Firebase อัปเดตไวขึ้นครับภู)
-if (file.size > 1 * 1024 * 1024) {
-alert("รูปใหญ่เกินไปครับภู! ขอไม่เกิน 1MB นะเพื่อน จะได้โหลดไวๆ");
+// ขยายขนาดเป็น 5MB ตามที่ภูต้องการครับ (5 * 1024 * 1024 bytes)
+const maxSize = 5 * 1024 * 1024; 
+if (file.size > maxSize) {
+alert("รูปนี้ใหญ่เกิน 5MB ครับภู! ลองลดขนาดลงนิดนึงนะเพื่อน เดี๋ยวระบบโหลดไม่ไหว");
 return;
 }
 
@@ -928,18 +929,18 @@ const imageData = e.target.result;
 const user = auth.currentUser;
 
 try {
-// 1. ส่งข้อมูลไปอัปเดตที่ Firebase
+// บันทึกลงระบบ Auth
 await updateProfile(user, { photoURL: imageData });
 
-// 2. เปลี่ยนรูปที่โชว์อยู่ทันทีโดยไม่ต้องรีโหลดหน้า
+// เปลี่ยนรูปบนหน้าจอทันที
 const avatarImg = document.getElementById('user-avatar');
 if (avatarImg) {
 avatarImg.src = imageData;
 }
 
-alert("หล่อเลยครับภู! เปลี่ยนรูปโปรไฟล์สำเร็จแล้ว");
+alert("รูปใหม่หล่อเท่มากครับภู! อัปเดตเรียบร้อย");
 } catch (error) {
-console.error("Error updating photo:", error);
+console.error("Error:", error);
 alert("เปลี่ยนรูปไม่สำเร็จ: " + error.message);
 }
 };
