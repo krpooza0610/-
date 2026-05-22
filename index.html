@@ -389,19 +389,28 @@ list.insertAdjacentHTML('afterbegin', noteItem); // เอาบันทึก�
 });
 const postsRef = ref(db, "posts");
 
+// --- 1. จัดการรูปภาพ ---
 window.previewImage = (event) => {
-if(event.target.files[0]) {
-document.getElementById('file-name').innerText = "เลือกรูปแล้ว: " + event.target.files[0].name;
+const file = event.target.files[0];
+if (file) {
+document.getElementById('file-name').innerText = "เลือกรูปแล้ว: " + file.name;
 const reader = new FileReader();
 reader.onload = () => {
 const output = document.getElementById('previewImg');
 output.src = reader.result;
 document.getElementById('imagePreview').style.display = 'block';
 };
-reader.readAsDataURL(event.target.files[0]);
-} // <-- เจมเติมปีกกาปิดที่หายไปตรงนี้ครับ!
+reader.readAsDataURL(file);
+}
 };
 
+window.cancelImage = () => {
+document.getElementById('imageInput').value = "";
+document.getElementById('imagePreview').style.display = 'none';
+document.getElementById('file-name').innerText = "ยังไม่ได้เลือกรูป";
+};
+
+// --- 2. ฟังก์ชันโพสต์ (Base64) ---
 window.uploadAndPost = async () => {
 const content = document.getElementById('postInput').value;
 const category = document.getElementById('postCategory').value;
@@ -430,11 +439,12 @@ date: new Date().toLocaleString('th-TH')
 document.getElementById('postInput').value = "";
 fileInput.value = "";
 document.getElementById('imagePreview').style.display = 'none';
+document.getElementById('file-name').innerText = "ยังไม่ได้เลือกรูป";
 btn.disabled = false;
 btn.innerText = "โพสต์";
 };
 
-// --- ส่วนนี้จะทำงานทันทีที่เปิดแอปแล้วเพราะปีกกาข้างบนปิดสนิทแล้วครับ ---
+// --- 3. ดึงฟีดหลัก (Auto-load) ---
 onValue(postsRef, (snapshot) => {
 const container = document.getElementById('feed-container');
 if (!container) return;
@@ -468,6 +478,7 @@ container.insertAdjacentHTML('afterbegin', html);
 });
 });
 
+// --- 4. ฟังก์ชันกรองหมวดหมู่ ---
 window.filterFeed = (category) => {
 const container = document.getElementById('feed-container');
 onValue(postsRef, (snapshot) => {
@@ -485,10 +496,10 @@ commentHtml += `<div style="font-size: 12px; background: rgba(255,255,255,0.05);
 const html = `<div class="post-card">
 <small style="color: var(--accent);">${post.category}</small>
 <p style="margin: 10px 0;">${post.content}</p>
-${post.image ? `<img src="${post.image}" style="width: 100%; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1);">` : ""}
+${post.image ? `<img src="${post.image}" style="width: 100%; border-radius: 10px; margin-top: 10px;">` : ""}
 <div class="post-action">
-<span onclick="likePost('${postId}')" style="cursor: pointer;">❤️ ${post.likes || 0}</span>
-<span onclick="toggleComments('${postId}')" style="cursor: pointer;">💬 คอมเมนต์ ${post.comments ? '(' + Object.keys(post.comments).length + ')' : '(0)'}</span>
+<span onclick="likePost('${postId}')">❤️ ${post.likes || 0}</span>
+<span onclick="toggleComments('${postId}')">💬 คอมเมนต์</span>
 </div>
 <div id="comments-${postId}" style="display: none; margin-top: 10px;">
 <div id="list-${postId}">${commentHtml}</div>
@@ -503,7 +514,8 @@ container.insertAdjacentHTML('afterbegin', html);
 });
 });
 };
-                     
+
+// --- 5. ฟังก์ชันอื่นๆ ---
 const myLikes = new Set(); 
 window.likePost = (id) => {
 const postLikeRef = ref(db, `posts/${id}/likes`);
@@ -517,6 +529,7 @@ return (currentLikes || 0) + 1;
 }
 });
 };
+
 window.addComment = (postId) => {
 const input = document.getElementById(`comment-input-${postId}`);
 if (input.value.trim()) {
@@ -526,21 +539,20 @@ author: "ภู",
 text: input.value,
 date: new Date().toLocaleString('th-TH')
 });
-input.value = ""; // เคลียร์ช่องพิมพ์
-// ไม่ต้องใช้ alert แล้ว ระบบจะดึงคอมเมนต์มาโชว์เองจาก onValue ข้างบนครับ
+input.value = "";
 }
 };
+
 window.toggleComments = (id) => {
 const area = document.getElementById(`comments-${id}`);
-if (area) {
-area.style.display = area.style.display === 'none' ? 'block' : 'none';
-}
+if (area) area.style.display = area.style.display === 'none' ? 'block' : 'none';
 };
-        window.cancelImage = () => {
-document.getElementById('imageInput').value = "";
-document.getElementById('imagePreview').style.display = 'none';
-document.getElementById('file-name').innerText = "ยังไม่ได้เลือกรูป";
-}
+
+window.showPage = (pageId) => {
+document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+const target = document.getElementById(pageId);
+if(target) target.classList.add('active');
+window.scrollTo(0, 0);
 };
 </script>
 </body>
