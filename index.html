@@ -911,6 +911,38 @@ alert("เปลี่ยนชื่อสำเร็จ!");
 location.reload();
 }
 };
+
+window.handlePhotoChange = (event) => {
+const file = event.target.files[0];
+if (!file) return;
+
+// ตรวจสอบขนาดไฟล์ (ไม่ควรเกิน 2MB เพื่อความเร็ว)
+if (file.size > 2 * 1024 * 1024) {
+alert("รูปใหญ่เกินไปครับภู! ขอไม่เกิน 2MB นะเพื่อน");
+return;
+}
+
+const reader = new FileReader();
+reader.onload = async (e) => {
+const imageData = e.target.result;
+const user = auth.currentUser;
+
+try {
+// 1. อัปเดตในระบบ Auth ของ Firebase
+await updateProfile(user, { photoURL: imageData });
+
+// 2. อัปเดตการแสดงผลบนหน้าจอทันที
+const avatarImg = document.getElementById('user-avatar');
+if (avatarImg) avatarImg.src = imageData;
+
+alert("เปลี่ยนรูปโปรไฟล์เรียบร้อยแล้วครับ!");
+} catch (error) {
+console.error("Error updating photo:", error);
+alert("เปลี่ยนรูปไม่สำเร็จ: " + error.message);
+}
+};
+reader.readAsDataURL(file);
+};
 </script>
 </body>
 </html>
