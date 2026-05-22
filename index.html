@@ -389,8 +389,6 @@ list.insertAdjacentHTML('afterbegin', noteItem); // เอาบันทึก�
 });
 const postsRef = ref(db, "posts");
 
-// ฟังก์ชันสร้างโพสต์
-// --- วางโค้ดที่ภูส่งมาตรงนี้ ---
 window.previewImage = (event) => {
 if(event.target.files[0]) {
 document.getElementById('file-name').innerText = "เลือกรูปแล้ว: " + event.target.files[0].name;
@@ -401,6 +399,7 @@ output.src = reader.result;
 document.getElementById('imagePreview').style.display = 'block';
 };
 reader.readAsDataURL(event.target.files[0]);
+} // <-- เจมเติมปีกกาปิดที่หายไปตรงนี้ครับ!
 };
 
 window.uploadAndPost = async () => {
@@ -421,7 +420,7 @@ reader.readAsDataURL(file);
 });
 }
 push(postsRef, {
-author: "ภู", // เปลี่ยนเป็นชื่อภูได้เลย
+author: "ภู",
 content: content,
 category: category,
 image: base64Image,
@@ -435,7 +434,7 @@ btn.disabled = false;
 btn.innerText = "โพสต์";
 };
 
-// 1. ดึงโพสต์มาโชว์ (อันเดียวจบ)
+// --- ส่วนนี้จะทำงานทันทีที่เปิดแอปแล้วเพราะปีกกาข้างบนปิดสนิทแล้วครับ ---
 onValue(postsRef, (snapshot) => {
 const container = document.getElementById('feed-container');
 if (!container) return;
@@ -455,7 +454,7 @@ const html = `<div class="post-card">
 ${post.image ? `<img src="${post.image}" style="width: 100%; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1);">` : ""}
 <div class="post-action">
 <span onclick="likePost('${postId}')" style="cursor: pointer;">❤️ ${post.likes || 0}</span>
-<span onclick="toggleComments('${postId}')" style="cursor: pointer;">💬 คอมเมนต์</span>
+<span onclick="toggleComments('${postId}')" style="cursor: pointer;">💬 คอมเมนต์ ${post.comments ? '(' + Object.keys(post.comments).length + ')' : '(0)'}</span>
 </div>
 <div id="comments-${postId}" style="display: none; margin-top: 10px;">
 <div id="list-${postId}">${commentHtml}</div>
@@ -486,9 +485,7 @@ commentHtml += `<div style="font-size: 12px; background: rgba(255,255,255,0.05);
 const html = `<div class="post-card">
 <small style="color: var(--accent);">${post.category}</small>
 <p style="margin: 10px 0;">${post.content}</p>
-
 ${post.image ? `<img src="${post.image}" style="width: 100%; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1);">` : ""}
-
 <div class="post-action">
 <span onclick="likePost('${postId}')" style="cursor: pointer;">❤️ ${post.likes || 0}</span>
 <span onclick="toggleComments('${postId}')" style="cursor: pointer;">💬 คอมเมนต์ ${post.comments ? '(' + Object.keys(post.comments).length + ')' : '(0)'}</span>
@@ -506,7 +503,7 @@ container.insertAdjacentHTML('afterbegin', html);
 });
 });
 };
-        
+                     
 const myLikes = new Set(); 
 window.likePost = (id) => {
 const postLikeRef = ref(db, `posts/${id}/likes`);
