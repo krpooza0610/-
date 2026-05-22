@@ -875,11 +875,25 @@ window.logout = () => {
 signOut(auth).then(() => location.reload());
 };
 
-window.updateProfileUI = (user) => {
+window.updateProfileUI = async (user) => {
 const profilePage = document.getElementById('profile-page');
 const isAdmin = user.email === ADMIN_EMAIL;
-const photoURL = user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+// --- ดึงรูปจาก Database แทน ---
+const userRef = ref(db, 'users/' + user.uid);
+let photoURL = "https://cdn-icons-png.flaticon.com/512/149/149071.png"; // รูปเริ่มต้น
+
+try {
+const snapshot = await get(userRef);
+if (snapshot.exists() && snapshot.val().profilePic) {
+photoURL = snapshot.val().profilePic;
+} else {
+photoURL = user.photoURL || photoURL;
+}
+} catch (e) { console.log(e); }
+
 const displayName = user.displayName || "นักอ่านนิรนาม";
+// ... (โค้ด HTML ด้านล่างเหมือนเดิมเลยครับ)
 
 profilePage.innerHTML = `
 <div class="welcome-box" style="margin-top: 20px;">
@@ -920,47 +934,35 @@ const reader = new FileReader();
 reader.onload = async (e) => {
 const img = new Image();
 img.onload = async () => {
-// --- ระบบย่อขนาดรูปอัตโนมัติ ---
 const canvas = document.createElement('canvas');
+const max_size = 400; // ย่อเหลือ 400px พอครับ ประหยัดที่และไม่ Error ชัวร์
 let width = img.width;
 let height = img.height;
-const max_size = 1000; // กำหนดให้ด้านที่ยาวที่สุดไม่เกิน 1000px (ชัดพอสำหรับมือถือ)
 
 if (width > height) {
-if (width > max_size) {
-height *= max_size / width;
-width = max_size;
-}
+if (width > max_size) { height *= max_size / width; width = max_size; }
 } else {
-if (height > max_size) {
-width *= max_size / height;
-height = max_size;
+if (height > max_size) { width *= max_size / height; height = max_size; }
 }
-}
-
 canvas.width = width;
 canvas.height = height;
 const ctx = canvas.getContext('2d');
 ctx.drawImage(img, 0, 0, width, height);
 
-// แปลงเป็นรหัสรูปภาพที่บีบอัดแล้ว (0.7 คือคุณภาพ 70% ชัดแต่ไฟล์เบา)
-const compressedData = canvas.toDataURL('image/jpeg', 0.7);
+const compressedData = canvas.toDataURL('image/jpeg', 0.6); // คุณภาพ 60% เบาหวิว
 const user = auth.currentUser;
 
 try {
-// ส่งข้อมูลที่ย่อแล้วไป Firebase
-await updateProfile(user, { photoURL: compressedData });
+// บันทึกลง Realtime Database แทน Firebase Auth
+await set(ref(db, 'users/' + user.uid), {
+profilePic: compressedData,
+lastUpdated: new Date().toISOString()
+});
 
-// เปลี่ยนรูปบนหน้าจอทันที
-const avatarImg = document.getElementById('user-avatar');
-if (avatarImg) {
-avatarImg.src = compressedData;
-}
-
-alert("รอบนี้ผ่านฉลุยครับภู! รูปหล่อเหมือนเดิมเพิ่มเติมคือไฟล์เบา");
+document.getElementById('user-avatar').src = compressedData;
+alert("สำเร็จ! รอบนี้ Database รับจบคราบ");
 } catch (error) {
-console.error("Error:", error);
-alert("ยังติดปัญหา: " + error.message);
+alert("ติดปัญหา: " + error.message);
 }
 };
 img.src = e.target.result;
