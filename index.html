@@ -269,6 +269,15 @@ border-color: var(--accent);
     <div class="nav-item">🔍<br>ค้นหา</div>
 <div class="nav-item" onclick="showPage('profile-page', this)">👤<br>โปรไฟล์</div>
     </nav>
+
+<div id="post-detail-page" class="page" style="padding: 15px;">
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+<button onclick="showPage('home-page')" style="background: none; border: none; color: var(--accent); font-size: 20px;">← กลับ</button>
+<h3 id="detail-category">หมวดหมู่</h3>
+</div>
+<div id="detail-content-area">
+</div>
+</div>
     
 <script type="module"> // ต้องใส่ type="module" เพื่อให้ใช้ import ได้
     // 1. นำเข้า Library ของ Firebase
@@ -493,14 +502,16 @@ Object.values(post.comments).forEach((cmt) => {
 commentHtml += `<div style="font-size: 12px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 5px; margin-bottom: 5px;"><b>${cmt.author}:</b> ${cmt.text}</div>`;
 });
 }
-const html = `<div class="post-card">
+// แก้ตรงนี้เพื่อให้จิ้มที่โพสต์แล้วเปิดหน้าเต็มจอ
+const html = `<div class="post-card" onclick="openPostDetail('${postId}')" style="cursor: pointer;">
 <small style="color: var(--accent);">${post.category}</small>
 <p style="margin: 10px 0;">${post.content}</p>
 ${post.image ? `<img src="${post.image}" style="width: 100%; border-radius: 10px; margin-top: 10px;">` : ""}
-<div class="post-action">
+<div class="post-action" onclick="event.stopPropagation()">
 <span onclick="likePost('${postId}')">❤️ ${post.likes || 0}</span>
-<span onclick="toggleComments('${postId}')">💬 คอมเมนต์</span>
+<span onclick="toggleComments('${postId}')">💬 ${post.comments ? Object.keys(post.comments).length : 0} คอมเมนต์</span>
 </div>
+</div>`;
 <div id="comments-${postId}" style="display: none; margin-top: 10px;">
 <div id="list-${postId}">${commentHtml}</div>
 <div style="display: flex; gap: 5px;">
@@ -553,6 +564,60 @@ document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
 const target = document.getElementById(pageId);
 if(target) target.classList.add('active');
 window.scrollTo(0, 0);
+};
+
+window.openPostDetail = (postId) => {
+const postRef = ref(db, `posts/${postId}`);
+onValue(postRef, (snapshot) => {
+const post = snapshot.val();
+if (!post) return;
+
+// นำทางไปหน้า Detail
+showPage('post-detail-page');
+
+// สร้างเนื้อหาคอมเมนต์
+let commentHtml = "";
+if (post.comments) {
+Object.values(post.comments).forEach((cmt) => {
+commentHtml += `<div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 10px; border-left: 3px solid var(--primary);">
+<div style="font-weight: bold; color: var(--accent); font-size: 13px; margin-bottom: 5px;">${cmt.author}</div>
+<div style="font-size: 14px;">${cmt.text}</div>
+</div>`;
+});
+}
+
+// ยัดเนื้อหาลงในหน้า Detail
+document.getElementById('detail-category').innerText = post.category;
+document.getElementById('detail-content-area').innerHTML = `
+<div class="post-card" style="background: none; border: none; padding: 0;">
+<p style="font-size: 18px; margin-bottom: 15px; line-height: 1.6;">${post.content}</p>
+${post.image ? `<img src="${post.image}" style="width: 100%; border-radius: 15px; margin-bottom: 20px;">` : ""}
+<div style="display: flex; gap: 20px; border-bottom: 1px solid var(--glass); padding-bottom: 15px; margin-bottom: 20px;">
+<span onclick="likePost('${postId}')" style="font-size: 16px;">❤️ ${post.likes || 0} ไลก์</span>
+<span style="font-size: 16px; color: var(--text-dim);">💬 ${post.comments ? Object.keys(post.comments).length : 0} คอมเมนต์</span>
+</div>
+<h4 style="margin-bottom: 15px;">คอมเมนต์ทั้งหมด</h4>
+<div id="detail-comment-list">${commentHtml}</div>
+<div style="display: flex; gap: 10px; margin-top: 20px; position: sticky; bottom: 10px; background: var(--bg-dark); padding: 10px 0;">
+<input type="text" id="detail-comment-input" placeholder="เขียนคอมเมนต์..." style="flex: 1; background: var(--glass); border: 1px solid var(--glass); color: white; border-radius: 20px; padding: 10px 15px;">
+<button onclick="addDetailComment('${postId}')" style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold;">ส่ง</button>
+</div>
+</div>`;
+}, { onlyOnce: true }); // ดึงครั้งเดียวพอ ไม่ต้องเฝ้า
+};
+
+window.addDetailComment = (postId) => {
+const input = document.getElementById('detail-comment-input');
+if (input.value.trim()) {
+const commentRef = ref(db, `posts/${postId}/comments`);
+push(commentRef, {
+author: "ภู",
+text: input.value,
+date: new Date().toLocaleString('th-TH')
+});
+input.value = "";
+openPostDetail(postId); // โหลดหน้าใหม่เพื่อโชว์คอมเมนต์ล่าสุด
+}
 };
 </script>
 </body>
