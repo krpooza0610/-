@@ -170,6 +170,29 @@ border-color: var(--accent);
     padding-left: 15px;
     border-left: 2px solid var(--primary);
     }
+.plus-btn {
+background: linear-gradient(135deg, var(--primary), #2575fc) !important;
+width: 65px !important;
+height: 65px !important;
+border-radius: 50% !important;
+display: flex !important;
+align-items: center !important;
+justify-content: center !important;
+font-size: 35px !important;
+font-weight: bold !important;
+color: white !important;
+box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+border: 5px solid var(--bg-dark) !important;
+position: relative !important;
+top: -25px !important; 
+transition: 0.3s !important;
+cursor: pointer !important;
+z-index: 999 !important;
+}
+
+.plus-btn:active {
+transform: scale(0.9) translateY(5px) !important;
+}
 </style>
 </head>
 <body>
@@ -260,15 +283,15 @@ border-color: var(--accent);
     <p>กำลังโหลดบันทึก...</p>
     </div>
     </div>    
-<nav class="nav-bar">
-    <div class="nav-item active" onclick="showPage('home-page', this)">🏠<br>หน้าหลัก</div>
+<div class="nav-bar">
+<div class="nav-item" onclick="showPage('home-page')">🏠</div>
+<div class="nav-item" onclick="showPage('jobs-page')">💼</div>
 
-    <div class="nav-item" onclick="showPage('chat-page', this)">💬<br>แชทสด</div>
+<div class="plus-btn" onclick="quickPost()">+</div>
 
-<div class="nav-item plus-btn" onclick="quickPost()">+</div>
-    <div class="nav-item">🔍<br>ค้นหา</div>
-<div class="nav-item" onclick="showPage('profile-page', this)">👤<br>โปรไฟล์</div>
-    </nav>
+<div class="nav-item" onclick="showPage('chat-page')">💬</div>
+<div class="nav-item" onclick="showPage('profile-page')">👤</div>
+</div>
 
 <div id="post-detail-page" class="page" style="padding: 15px;">
 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
