@@ -418,23 +418,26 @@ to { transform: scale(1); opacity: 1; }
 <script type="module"> // ต้องใส่ type="module" เพื่อให้ใช้ import ได้
     // 1. นำเข้า Library ของ Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getDatabase, ref, push, onValue, set, runTransaction, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-                // 2. กุญแจ Firebase ของภู (ใส่ให้ครบตามนี้)
-                    const firebaseConfig = {
-                            apiKey: "AIzaSyB6WVXMJFGYSChj4nkULqZa-8x-odUwEzE",
-                                    authDomain: "manbodtip.firebaseapp.com",
-                                            databaseURL: "https://manbodtip-default-rtdb.firebaseio.com",
-                                                    projectId: "manbodtip",
-                                                            storageBucket: "manbodtip.firebasestorage.app",
-                                                                    messagingSenderId: "654202068900",
-                                                                            appId: "1:654202068900:web:595437786bc69233fa6b31"
-                                                                                };
+// 1. คอนฟิก Firebase ของภู
+const firebaseConfig = {
+apiKey: "AIzaSyB6WVXMJFGYSChj4nkULqZa-8x-odUwEzE",
+authDomain: "manbodtip.firebaseapp.com",
+databaseURL: "https://manbodtip-default-rtdb.firebaseio.com",
+projectId: "manbodtip",
+storageBucket: "manbodtip.firebasestorage.app",
+messagingSenderId: "654202068900",
+appId: "1:654202068900:web:595437786bc69233fa6b31"
+};
 
-                                                                                    // 3. เริ่มต้นระบบ
-                                                                                        const app = initializeApp(firebaseConfig);
-                                                                                            const db = getDatabase(app);
-                                                                                                const chatRef = ref(db, "chats");
+// 2. เริ่มต้นระบบ
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+const googleProvider = new GoogleAuthProvider();
+const ADMIN_EMAIL = "krpooza0610@gmail.com";
 
                                                                                                     // --- ฟังก์ชันสลับหน้า (ย้ายมาไว้ข้างใน module) ---
                                                                                                         window.showPage = (pageId, element) => {
@@ -680,9 +683,11 @@ if (area) area.style.display = area.style.display === 'none' ? 'block' : 'none';
 
 window.showPage = (pageId) => {
 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-const target = document.getElementById(pageId);
-if(target) target.classList.add('active');
-window.scrollTo(0, 0);
+document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+const targetPage = document.getElementById(pageId);
+if(targetPage) targetPage.classList.add('active');
+const activeNav = document.querySelector(`[onclick="showPage('${pageId}')"]`);
+if(activeNav) activeNav.classList.add('active');
 };
 
 window.openPostDetail = (postId) => {
@@ -857,35 +862,26 @@ const ADMIN_EMAIL = "krpooza0610@gmail.com";
 onAuthStateChanged(auth, async (user) => {
 const loginOverlay = document.getElementById('login-overlay');
 if (user) {
-loginOverlay.style.display = 'none';
-// ต้องใส่ await เพราะเป็นฟังก์ชันดึงข้อมูลจาก Database ครับ
-await updateProfileUI(user);
+if(loginOverlay) loginOverlay.style.display = 'none';
+await window.updateProfileUI(user);
 } else {
-loginOverlay.style.display = 'flex';
+if(loginOverlay) loginOverlay.style.display = 'flex';
 }
 });
 
-window.loginGoogle = () => {
-signInWithPopup(auth, googleProvider).catch(err => alert(err.message));
-};
-
-window.loginGuest = () => {
-signInAnonymously(auth).catch(err => alert(err.message));
-};
-
-window.logout = () => {
-signOut(auth).then(() => location.reload());
-};
+window.loginGoogle = () => signInWithPopup(auth, googleProvider).catch(err => alert(err.message));
+window.loginGuest = () => signInAnonymously(auth).catch(err => alert(err.message));
+window.logout = () => signOut(auth).then(() => location.reload());
 
 window.updateProfileUI = async (user) => {
 const profilePage = document.getElementById('profile-page');
-if (!profilePage) return; // กัน Error ถ้าหน้ายังไม่โหลด
+if (!profilePage) return;
 
 const isAdmin = user.email === ADMIN_EMAIL;
 let photoURL = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
 try {
-// ดึงรูปจาก Database มาเช็ก
+// เช็ครูปจาก Database
 const snapshot = await get(ref(db, 'users/' + user.uid + '/profilePic'));
 if (snapshot.exists()) {
 photoURL = snapshot.val();
@@ -893,7 +889,7 @@ photoURL = snapshot.val();
 photoURL = user.photoURL || photoURL;
 }
 } catch (e) {
-console.error("ดึงรูปพลาด:", e);
+console.error("Error fetching photo:", e);
 }
 
 const displayName = user.displayName || "นักอ่านนิรนาม";
@@ -917,14 +913,13 @@ ${isAdmin ? `<button onclick="toggleAdminNotes()" class="welcome-box" style="bac
 
 window.changeName = async () => {
 if (localStorage.getItem('nameChanged_' + auth.currentUser.uid)) {
-alert("ภูเปลี่ยนชื่อไปแล้ว เปลี่ยนได้แค่ครั้งเดียวนะครับ!");
+alert("เปลี่ยนได้แค่ครั้งเดียวนะครับ!");
 return;
 }
-const newName = prompt("ระบุชื่อใหม่ของคุณ:");
-if (newName && newName.trim().length > 0) {
+const newName = prompt("ระบุชื่อใหม่:");
+if (newName && newName.trim()) {
 await updateProfile(auth.currentUser, { displayName: newName });
 localStorage.setItem('nameChanged_' + auth.currentUser.uid, true);
-alert("เปลี่ยนชื่อสำเร็จ!");
 location.reload();
 }
 };
@@ -932,33 +927,25 @@ location.reload();
 window.handlePhotoChange = async (event) => {
 const file = event.target.files[0];
 if (!file) return;
-
 const reader = new FileReader();
 reader.onload = async (e) => {
 const img = new Image();
 img.onload = async () => {
 const canvas = document.createElement('canvas');
-const max_size = 400; 
+const max_size = 400;
 let width = img.width;
 let height = img.height;
 if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } }
 else { if (height > max_size) { width *= max_size / height; height = max_size; } }
-canvas.width = width;
-canvas.height = height;
+canvas.width = width; canvas.height = height;
 const ctx = canvas.getContext('2d');
 ctx.drawImage(img, 0, 0, width, height);
-
-const compressedData = canvas.toDataURL('image/jpeg', 0.6); 
-const user = auth.currentUser;
-
+const compressedData = canvas.toDataURL('image/jpeg', 0.6);
 try {
-// บันทึกลง database ตรงๆ
-await set(ref(db, 'users/' + user.uid + '/profilePic'), compressedData);
+await set(ref(db, 'users/' + auth.currentUser.uid + '/profilePic'), compressedData);
 document.getElementById('user-avatar').src = compressedData;
-alert("เปลี่ยนรูปสำเร็จครับภู!");
-} catch (error) {
-alert("Database Error: " + error.message);
-}
+alert("เปลี่ยนรูปสำเร็จ!");
+} catch (error) { alert(error.message); }
 };
 img.src = e.target.result;
 };
