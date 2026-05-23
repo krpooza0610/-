@@ -267,7 +267,7 @@ to { transform: scale(1); opacity: 1; }
 <body>
 
 <div style="padding: 10px; background: rgba(0,0,0,0.3); text-align: center;">
-<audio id="bgMusic" loop preload="auto">
+<audio id="bgMusic"></audio> <!-- loop ออกไปก่อน เพื่อให้มันหยุดที่เพลงสุดท้ายได้ -->
     <source src="music.mp3" type="audio/mpeg">
 </audio>
 <div id="musicBtn" class="floating-btn">
@@ -776,21 +776,34 @@ window.bgMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-S
 window.isPlaying = false;
 
 // 2. ฟังก์ชันควบคุมเพลง (ปรับแก้ให้กดง่ายขึ้น)
-window.toggleMusic = () => {
+// --- ระบบ Playlist อัจฉริยะ โดยเจม ---
 const audio = document.getElementById('bgMusic');
-const icon = document.getElementById('musicIcon');
-if (!audio || !icon) return;
+const playlist = ["music.mp3", "music1.mp3"]; // ใส่ชื่อไฟล์เพลงที่นี่
+let currentTrack = 0;
 
-if (audio.paused) {
-audio.play().then(() => {
-icon.innerText = "⏸️"; // เปลี่ยนเป็นรูปหยุดเมื่อเล่นเพลง
-}).catch((error) => {
-console.log("เล่นเพลงไม่ได้:", error);
-});
-} else {
-audio.pause();
-icon.innerText = "🎵"; // เปลี่ยนกลับเป็นรูปโน้ตเมื่อหยุดเพลง
+// ฟังก์ชันเล่นเพลงตามลำดับ
+function playTrack(index) {
+  audio.src = playlist[index];
+  audio.play().catch(e => console.log("รอการแตะจอ..."));
 }
+
+// เมื่อเพลงจบ ให้เล่นเพลงถัดไป
+audio.onended = () => {
+  currentTrack = (currentTrack + 1) % playlist.length; // ถ้าจบเพลงสุดท้าย ให้วนกลับมา 0
+  playTrack(currentTrack);
+};
+
+// แก้ฟังก์ชัน toggleMusic ให้รองรับ Playlist
+window.toggleMusic = () => {
+  const icon = document.getElementById('musicIcon');
+  if (audio.paused) {
+    if (audio.src === "") playTrack(currentTrack); // ถ้ายังไม่ได้เริ่มเล่น ให้เริ่มเพลงแรก
+    else audio.play();
+    icon.innerText = "⏸️";
+  } else {
+    audio.pause();
+    icon.innerText = "🎵";
+  }
 };
 
 // --- ระบบ Auto-play หลังแตะหน้าจอครั้งแรก ---
