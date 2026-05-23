@@ -268,7 +268,7 @@ to { transform: scale(1); opacity: 1; }
 <audio id="bgMusic" loop>
 <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
 </audio>
-<div id="musicBtn" class="floating-btn" onclick="window.toggleMusic()">
+<div id="musicBtn" class="floating-btn">
 <span id="musicIcon">🎵</span>
 </div>
 </div>
@@ -800,6 +800,23 @@ document.getElementById('musicIcon').innerText = "⏸️";
 }
 }, { once: true }); 
 // {once: true} หมายความว่าให้ทำงานแค่ครั้งแรกครั้งเดียวที่แตะจอครับ
+
+// ผูก Event ให้ปุ่มลอย: คลิกสั้นๆ ให้เปิดเพลง, ลากได้ด้วย
+const btn = document.getElementById('musicBtn');
+let isDragging = false;
+
+btn.addEventListener('mousedown', () => isDragging = false);
+btn.addEventListener('mousemove', () => isDragging = true);
+btn.addEventListener('mouseup', () => {
+if (!isDragging) window.toggleMusic();
+});
+
+// สำหรับมือถือ (Touch)
+btn.addEventListener('touchstart', () => isDragging = false);
+btn.addEventListener('touchmove', () => isDragging = true);
+btn.addEventListener('touchend', (e) => {
+if (!isDragging) window.toggleMusic();
+});
 </script>
 </body>
 </html>
