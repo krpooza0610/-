@@ -592,8 +592,10 @@ if (targetPage) targetPage.classList.add('active');
 const nav = document.querySelector(`[onclick="showPage('${pageId}')"]`);
 if (nav) nav.classList.add('active');
 };
-
+    
+// ปรับฟังก์ชันเลือกหมวดหมู่ให้จำค่าลงตัวแปรด้วย
 window.filterFeed = (cat) => {
+window.currentFeedCategory = cat;
 onValue(postsRef, (snap) => {
 const container = document.getElementById('feed-container');
 if(!container) return;
@@ -605,11 +607,19 @@ if(cat === 'ทั้งหมด' || p.category === cat) window.renderPost(chil
 }, {onlyOnce: true});
 };
 
+// แก้บล็อก Real-time สัญญาณ Firebase ให้เช็กหมวดหมู่ปัจจุบันก่อนวาด
 onValue(postsRef, (snapshot) => {
 const container = document.getElementById('feed-container');
-if (container && !document.getElementById('search-page').classList.contains('active')) {
+const searchPage = document.getElementById('search-page');
+if (container && searchPage && !searchPage.classList.contains('active')) {
 container.innerHTML = "";
-snapshot.forEach((child) => window.renderPost(child.key, child.val(), container));
+snapshot.forEach((child) => {
+const p = child.val();
+const cat = window.currentFeedCategory;
+if (cat === 'ทั้งหมด' || p.category === cat) {
+window.renderPost(child.key, p, container);
+}
+});
 }
 });
 
