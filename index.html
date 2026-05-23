@@ -145,10 +145,12 @@ justify-content: center;
 box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 cursor: pointer;
 }
+
 .floating-btn {
 position: fixed;
-bottom: 100px; /* เริ่มต้นที่เหนือเมนู Nav */
+top: 500px; /* เพิ่มค่าเริ่มต้น */
 right: 20px;
+left: auto; /* เพิ่มบรรทัดนี้ */
 width: 50px;
 height: 50px;
 background: var(--primary);
@@ -158,10 +160,10 @@ align-items: center;
 justify-content: center;
 font-size: 20px;
 z-index: 9999;
-cursor: move; /* บอกให้รู้ว่าลากได้ */
+cursor: move;
 box-shadow: 0 0 15px rgba(106, 17, 203, 0.5);
 border: 2px solid rgba(255,255,255,0.2);
-touch-action: none; /* สำคัญ: ป้องกันหน้าจอสั่นเวลาลากบนมือถือ */
+touch-action: none;
 }
 
 /* เอฟเฟกต์ตอนเพลงเล่น */
@@ -802,20 +804,45 @@ document.getElementById('musicIcon').innerText = "⏸️";
 // {once: true} หมายความว่าให้ทำงานแค่ครั้งแรกครั้งเดียวที่แตะจอครับ
 
 // ผูก Event ให้ปุ่มลอย: คลิกสั้นๆ ให้เปิดเพลง, ลากได้ด้วย
-const btn = document.getElementById('musicBtn');
-let isDragging = false;
+const btn = document.getElementById("musicBtn");
+let offsetX, offsetY;
 
-btn.addEventListener('mousedown', () => isDragging = false);
-btn.addEventListener('mousemove', () => isDragging = true);
-btn.addEventListener('mouseup', () => {
-if (!isDragging) window.toggleMusic();
-});
+btn.addEventListener("touchstart", (e) => {
+  isDragging = false;
+  let touch = e.touches[0];
+  offsetX = touch.clientX - btn.offsetLeft;
+  offsetY = touch.clientY - btn.offsetTop;
+}, {passive: false});
 
-// สำหรับมือถือ (Touch)
-btn.addEventListener('touchstart', () => isDragging = false);
-btn.addEventListener('touchmove', () => isDragging = true);
-btn.addEventListener('touchend', (e) => {
-if (!isDragging) window.toggleMusic();
+btn.addEventListener("touchmove", (e) => {
+  isDragging = true;
+  let touch = e.touches[0];
+  btn.style.left = (touch.clientX - offsetX) + "px";
+  btn.style.top = (touch.clientY - offsetY) + "px";
+  btn.style.right = "auto";
+  e.preventDefault();
+}, {passive: false});
+
+// เพิ่ม Event สำหรับเมาส์เผื่อเช็กบนคอม
+btn.addEventListener("mousedown", (e) => {
+  isDragging = false;
+  offsetX = e.clientX - btn.offsetLeft;
+  offsetY = e.clientY - btn.offsetTop;
+  
+  const onMouseMove = (e) => {
+    isDragging = true;
+    btn.style.left = (e.clientX - offsetX) + "px";
+    btn.style.top = (e.clientY - offsetY) + "px";
+    btn.style.right = "auto";
+  };
+  
+  const stopDrag = () => {
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", stopDrag);
+  };
+  
+  document.addEventListener("mousemove", onMouseMove);
+  document.addEventListener("mouseup", stopDrag);
 });
 
 let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
