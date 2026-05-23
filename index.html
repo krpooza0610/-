@@ -418,9 +418,9 @@ to { transform: scale(1); opacity: 1; }
 <script type="module"> // ต้องใส่ type="module" เพื่อให้ใช้ import ได้
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getDatabase, ref, push, onValue, set, runTransaction, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, push, onValue, set, runTransaction, get, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// 1. คอนฟิก Firebase (ใช้ตัวเดียวจบ)
+// 1. คอนฟิก Firebase (ประกาศครั้งเดียวจบ)
 const firebaseConfig = {
 apiKey: "AIzaSyB6WVXMJFGYSChj4nkULqZa-8x-odUwEzE",
 authDomain: "manbodtip.firebaseapp.com",
@@ -437,97 +437,60 @@ const db = getDatabase(app);
 const googleProvider = new GoogleAuthProvider();
 const ADMIN_EMAIL = "krpooza0610@gmail.com";
 
-                                                                                                                                                // --- ระบบแชทสด (Firebase ของจริง) ---
-                                                                                                                                                    window.sendMessage = () => {
-                                                                                                                                                            const input = document.getElementById('chatInput');
-                                                                                                                                                                    if(input.value.trim() !== "") {
-                                                                                                                                                                                push(chatRef, {
-                                                                                                                                                                                                text: input.value,
-                                                                                                                                                                                                                time: Date.now()
-                                                                                                                                                                                                                            });
-                                                                                                                                                                                                                                        input.value = "";
-                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                    };
-
-                                                                                                                                                                                                                                                        onChildAdded(chatRef, (snapshot) => {
-                                                                                                                                                                                                                                                                const data = snapshot.val();
-                                                                                                                                                                                                                                                                        const display = document.getElementById('chat-display');
-                                                                                                                                                                                                                                                                                const emptyMsg = display.querySelector('div[style*="text-align: center"]');
-                                                                                                                                                                                                                                                                                        if (emptyMsg) emptyMsg.remove(); // ลบคำว่า "กำลังเชื่อมต่อ" ออกเมื่อมีแชท
-
-                                                                                                                                                                                                                                                                                                const newMsg = `<div class="msg-bubble">${data.text}</div>`;
-                                                                                                                                                                                                                                                                                                        display.insertAdjacentHTML('beforeend', newMsg);
-                                                                                                                                                                                                                                                                                                                display.scrollTop = display.scrollHeight;
-                                                                                                                                                                                                                                                                                                                    });
-
-                                                                                                                                                                                                                                                                                                                        // --- ระบบเพลงและปุ่มลาก (Drag System) ---
-                                                                                                                                                                                                                                                                                                                            const mBtn = document.getElementById('musicBtn');
-                                                                                                                                                                                                                                                                                                                                const music = document.getElementById('bgMusic');
-                                                                                                                                                                                                                                                                                                                                    const icon = document.getElementById('musicIcon');
-                                                                                                                                                                                                                                                                                                                                        let isDragging = false;
-
-                                                                                                                                                                                                                                                                                                                                            window.toggleMusic = () => {
-                                                                                                                                                                                                                                                                                                                                                    if (isDragging) return;
-                                                                                                                                                                                                                                                                                                                                                            if (music.paused) {
-                                                                                                                                                                                                                                                                                                                                                                        music.play();
-                                                                                                                                                                                                                                                                                                                                                                                    icon.innerText = "⏸️";
-                                                                                                                                                                                                                                                                                                                                                                                                mBtn.classList.add('music-playing');
-                                                                                                                                                                                                                                                                                                                                                                                                        } else {
-                                                                                                                                                                                                                                                                                                                                                                                                                    music.pause();
-                                                                                                                                                                                                                                                                                                                                                                                                                                icon.innerText = "🎵";
-                                                                                                                                                                                                                                                                                                                                                                                                                                            mBtn.classList.remove('music-playing');
-                                                                                                                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                        };
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                            mBtn.addEventListener('touchmove', (e) => {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                    isDragging = true;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            let touchLocation = e.targetTouches[0];
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    mBtn.style.left = (touchLocation.pageX - 25) + 'px';
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            mBtn.style.top = (touchLocation.pageY - 25) + 'px';
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                });
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    mBtn.addEventListener('touchend', () => {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            setTimeout(() => { isDragging = false; }, 100);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                });
-// สร้างทางเชื่อมไปเก็บข้อมูลบันทึก (แยกโฟลเดอร์จากแชท)
+// ทางเชื่อมข้อมูลต่างๆ
+const chatRef = ref(db, "chats");
 const notesRef = ref(db, "admin_notes");
+const postsRef = ref(db, "posts");
 
-// ฟังก์ชันเปิด-ปิด สมุดบันทึก
+// --- 2. ระบบแชทสด ---
+window.sendMessage = () => {
+const input = document.getElementById('chatInput');
+if(input.value.trim() !== "") {
+push(chatRef, { text: input.value, time: Date.now() });
+input.value = "";
+}
+};
+
+onChildAdded(chatRef, (snapshot) => {
+const data = snapshot.val();
+const display = document.getElementById('chat-display');
+if (!display) return;
+const emptyMsg = display.querySelector('div[style*="text-align: center"]');
+if (emptyMsg) emptyMsg.remove();
+const newMsg = `<div class="msg-bubble">${data.text}</div>`;
+display.insertAdjacentHTML('beforeend', newMsg);
+display.scrollTop = display.scrollHeight;
+});
+
+// --- 3. ระบบบันทึกโน้ตแอดมิน ---
 window.toggleAdminNotes = () => {
 const area = document.getElementById('admin-notes-area');
 area.style.display = area.style.display === 'none' ? 'block' : 'none';
 };
 
-// ฟังก์ชันบันทึกโน้ตลง Firebase
 window.saveAdminNote = () => {
 const noteInput = document.getElementById('adminNoteInput');
 if(noteInput.value.trim() !== "") {
-push(notesRef, {
-content: noteInput.value,
-date: new Date().toLocaleString('th-TH')
-});
+push(notesRef, { content: noteInput.value, date: new Date().toLocaleString('th-TH') });
 noteInput.value = "";
 alert("บันทึกเรียบร้อยครับแอดมินภู!");
 }
 };
 
-// ระบบดึงโน้ตมาโชว์ (เฉพาะเครื่องแอดมิน)
 onChildAdded(notesRef, (snapshot) => {
 const data = snapshot.val();
 const list = document.getElementById('notes-list');
-if(list.innerHTML.includes("กำลังโหลด")) list.innerHTML = ""; // ล้างตัวหนังสือรอโหลด
-
+if(!list) return;
+if(list.innerHTML.includes("กำลังโหลด")) list.innerHTML = "";
 const noteItem = `
 <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--accent);">
 <p style="color: white;">${data.content}</p>
 <small style="font-size: 10px; opacity: 0.5;">${data.date}</small>
-</div>
-`;
-list.insertAdjacentHTML('afterbegin', noteItem); // เอาบันทึกใหม่ไว้บนสุด
+</div>`;
+list.insertAdjacentHTML('afterbegin', noteItem);
 });
-const postsRef = ref(db, "posts");
 
-// --- 1. จัดการรูปภาพ ---
+// --- 4. ระบบจัดการรูปภาพและโพสต์ ---
 window.previewImage = (event) => {
 const file = event.target.files[0];
 if (file) {
@@ -548,7 +511,6 @@ document.getElementById('imagePreview').style.display = 'none';
 document.getElementById('file-name').innerText = "ยังไม่ได้เลือกรูป";
 };
 
-// --- 2. ฟังก์ชันโพสต์ (Base64) ---
 window.uploadAndPost = async () => {
 const content = document.getElementById('postInput').value;
 const category = document.getElementById('postCategory').value;
@@ -567,12 +529,13 @@ reader.readAsDataURL(file);
 });
 }
 push(postsRef, {
-author: "ภู",
+author: auth.currentUser ? auth.currentUser.displayName : "ภู",
 content: content,
 category: category,
 image: base64Image,
 likes: 0,
-date: new Date().toLocaleString('th-TH')
+date: new Date().toLocaleString('th-TH'),
+timestamp: Date.now()
 });
 document.getElementById('postInput').value = "";
 fileInput.value = "";
@@ -582,7 +545,7 @@ btn.disabled = false;
 btn.innerText = "โพสต์";
 };
 
-// --- 3. ดึงฟีดหลัก (Auto-load) ---
+// --- 5. ระบบ Feed และนำทาง ---
 onValue(postsRef, (snapshot) => {
 const container = document.getElementById('feed-container');
 if (!container) return;
@@ -590,7 +553,6 @@ container.innerHTML = "";
 snapshot.forEach((childSnapshot) => {
 const post = childSnapshot.val();
 const postId = childSnapshot.key;
-// หน้าฟีดหลักเราจะไม่โชว์คอมเมนต์แล้ว เพราะเราจะให้จิ้มเข้าไปดูข้างในแทน
 const html = `<div class="post-card" onclick="openPostDetail('${postId}')" style="cursor: pointer;">
 <small style="color: var(--accent);">${post.category}</small>
 <p style="margin: 10px 0;">${post.content}</p>
@@ -598,80 +560,11 @@ ${post.image ? `<img src="${post.image}" style="width: 100%; border-radius: 10px
 <div class="post-action" onclick="event.stopPropagation()">
 <span onclick="likePost('${postId}')">❤️ ${post.likes || 0}</span>
 <span onclick="openPostDetail('${postId}')">💬 ${post.comments ? Object.keys(post.comments).length : 0} คอมเมนต์</span>
-</div>
-</div>`;
+</div></div>`;
 container.insertAdjacentHTML('afterbegin', html);
 });
 });
 
-// --- 4. ฟังก์ชันกรองหมวดหมู่ ---
-window.filterFeed = (category) => {
-const container = document.getElementById('feed-container');
-onValue(postsRef, (snapshot) => {
-container.innerHTML = "";
-snapshot.forEach((childSnapshot) => {
-const post = childSnapshot.val();
-if (post.category === category) {
-const postId = childSnapshot.key;
-const html = `<div class="post-card" onclick="openPostDetail('${postId}')" style="cursor: pointer;">
-<small style="color: var(--accent);">${post.category}</small>
-<p style="margin: 10px 0;">${post.content}</p>
-${post.image ? `<img src="${post.image}" style="width: 100%; border-radius: 10px; margin-top: 10px;">` : ""}
-<div class="post-action" onclick="event.stopPropagation()">
-<span onclick="likePost('${postId}')">❤️ ${post.likes || 0}</span>
-<span onclick="openPostDetail('${postId}')">💬 ${post.comments ? Object.keys(post.comments).length : 0} คอมเมนต์</span>
-</div>
-</div>`;
-container.insertAdjacentHTML('afterbegin', html);
-}
-});
-});
-};
-
-// --- 5. ฟังก์ชันอื่นๆ ---
-const myLikes = new Set(); 
-window.likePost = (id) => {
-const postLikeRef = ref(db, `posts/${id}/likes`);
-runTransaction(postLikeRef, (currentLikes) => {
-if (myLikes.has(id)) {
-myLikes.delete(id); 
-return (currentLikes || 1) - 1;
-} else {
-myLikes.add(id); 
-return (currentLikes || 0) + 1;
-}
-}).then(() => {
-// เพิ่มส่วนนี้: ถ้ากดไลก์ตอนอยู่หน้าเต็มจอ ให้สั่งเปิดหน้าเดิมซ้ำเพื่ออัปเดตตัวเลข
-const detailPage = document.getElementById('post-detail-page');
-if (detailPage && detailPage.classList.contains('active')) {
-openPostDetail(id);
-}
-});
-};
-
-const myCommentLikes = new Set();
-window.likeComment = (postId, commentId) => {
-const commentLikeRef = ref(db, `posts/${postId}/comments/${commentId}/likes`);
-const uniqueKey = postId + commentId;
-runTransaction(commentLikeRef, (currentLikes) => {
-if (myCommentLikes.has(uniqueKey)) {
-myCommentLikes.delete(uniqueKey);
-return (currentLikes || 1) - 1;
-} else {
-myCommentLikes.add(uniqueKey);
-return (currentLikes || 0) + 1;
-}
-}).then(() => {
-openPostDetail(postId);
-});
-};
-        
-window.toggleComments = (id) => {
-const area = document.getElementById(`comments-${id}`);
-if (area) area.style.display = area.style.display === 'none' ? 'block' : 'none';
-};
-
-// 2. ระบบนำทาง (Menu Navigation)
 window.showPage = (pageId) => {
 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
 document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -687,7 +580,6 @@ onValue(postRef, (snapshot) => {
 const post = snapshot.val();
 if (!post) return;
 showPage('post-detail-page');
-// ส่วนหนึ่งในฟังก์ชัน openPostDetail
 let commentHtml = "";
 if (post.comments) {
 Object.entries(post.comments).forEach(([commentId, cmt]) => {
@@ -695,12 +587,9 @@ commentHtml += `
 <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 10px; border-left: 3px solid var(--primary);">
 <div style="display: flex; justify-content: space-between; align-items: center;">
 <div style="font-weight: bold; color: var(--accent); font-size: 13px;">${cmt.author}</div>
-<div onclick="likeComment('${postId}', '${commentId}')" style="cursor: pointer; font-size: 12px; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 15px;">
-❤️ ${cmt.likes || 0}
+<div onclick="likeComment('${postId}', '${commentId}')" style="cursor: pointer; font-size: 12px; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 15px;">❤️ ${cmt.likes || 0}</div>
 </div>
-</div>
-<div style="font-size: 14px; margin-top: 5px;">${cmt.text}</div>
-</div>`;
+<div style="font-size: 14px; margin-top: 5px;">${cmt.text}</div></div>`;
 });
 }
 document.getElementById('detail-category').innerText = post.category;
@@ -712,22 +601,25 @@ ${post.image ? `<img src="${post.image}" onclick="viewPhoto('${post.image}')" st
 <span onclick="likePost('${postId}')" style="font-size: 16px; cursor: pointer;">❤️ ${post.likes || 0} ไลก์</span>
 <span style="font-size: 16px; color: var(--text-dim);">💬 ${post.comments ? Object.keys(post.comments).length : 0} คอมเมนต์</span>
 </div>
-<h4 style="margin-bottom: 15px;">คอมเมนต์ทั้งหมด</h4>
 <div id="detail-comment-list">${commentHtml}</div>
 <div style="display: flex; gap: 10px; margin-top: 20px; position: sticky; bottom: 10px; background: var(--bg-dark); padding: 10px 0;">
-<input type="text" id="detail-comment-input" placeholder="เขียนคอมเมนต์..." style="flex: 1; background: var(--glass); border: 1px solid var(--glass); color: white; border-radius: 20px; padding: 10px 15px;">
-<button onclick="addDetailComment('${postId}')" style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold;">ส่ง</button>
-</div>
-</div>`;
+<input type="text" id="detail-comment-input" placeholder="เขียนคอมเมนต์..." style="flex: 1; background: var(--glass); border: 1px solid white; color: white; border-radius: 20px; padding: 10px 15px;">
+<button onclick="addDetailComment('${postId}')" style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 20px;">ส่ง</button>
+</div></div>`;
 }, { onlyOnce: true });
+};
+
+// --- 6. ระบบไลก์และคอมเมนต์ ---
+const myLikes = new Set();
+window.likePost = (id) => {
+runTransaction(ref(db, `posts/${id}/likes`), (current) => (current || 0) + 1);
 };
 
 window.addDetailComment = (postId) => {
 const input = document.getElementById('detail-comment-input');
 if (input.value.trim()) {
-const commentRef = ref(db, `posts/${postId}/comments`);
-push(commentRef, {
-author: "ภู",
+push(ref(db, `posts/${postId}/comments`), {
+author: auth.currentUser ? auth.currentUser.displayName : "ภู",
 text: input.value,
 likes: 0,
 date: new Date().toLocaleString('th-TH')
@@ -736,120 +628,28 @@ input.value = "";
 openPostDetail(postId);
 }
 };
-        window.quickPost = () => {
-// 1. สั่งให้กลับไปหน้า Home ก่อน
-showPage('home-page');
 
-// 2. หาช่องพิมพ์ข้อความ
-const postInput = document.getElementById('postInput');
+// --- 7. ระบบเพลงและ Dragปุ่ม ---
+const mBtn = document.getElementById('musicBtn');
+const music = document.getElementById('bgMusic');
+const icon = document.getElementById('musicIcon');
+let isDragging = false;
 
-if (postInput) {
-// 3. เลื่อนหน้าจอขึ้นไปบนสุดเพื่อให้เห็นช่องโพสต์ชัดๆ
-window.scrollTo({ top: 0, behavior: 'smooth' });
-
-// 4. สั่งให้เคอร์เซอร์ไปกะพริบที่ช่องพิมพ์ (Focus)
-setTimeout(() => {
-postInput.focus();
-}, 300); // รอให้หน้าสลับเสร็จแป๊บนึงค่อยโฟกัส
-
-        // เพิ่มลูกเล่นให้ช่องโพสต์ดูเด่นขึ้น
-postInput.style.transition = "0.5s";
-postInput.style.background = "rgba(255, 215, 0, 0.2)"; // สีทองจางๆ
-setTimeout(() => {
-postInput.style.background = "transparent"; // กลับเป็นสีเดิม
-}, 1000);
-}
+window.toggleMusic = () => {
+if (isDragging) return;
+if (music.paused) { music.play(); icon.innerText = "⏸️"; mBtn.classList.add('music-playing'); }
+else { music.pause(); icon.innerText = "🎵"; mBtn.classList.remove('music-playing'); }
 };
 
-window.startSearch = () => {
-const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
-const resultsContainer = document.getElementById('search-results');
-if (!keyword) return;
-
-resultsContainer.innerHTML = '<p style="text-align: center; margin-top: 20px;">กำลังค้นหา...</p>';
-
-onValue(postsRef, (snapshot) => {
-resultsContainer.innerHTML = "";
-let found = false;
-
-snapshot.forEach((childSnapshot) => {
-const post = childSnapshot.val();
-const postId = childSnapshot.key;
-
-// เช็กว่าคำค้นหาอยู่ในเนื้อหาโพสต์ หรือหมวดหมู่ไหม
-if (post.content.toLowerCase().includes(keyword) || post.category.toLowerCase().includes(keyword)) {
-found = true;
-const html = `<div class="post-card" onclick="openPostDetail('${postId}')" style="cursor: pointer;">
-<small style="color: var(--accent);">${post.category}</small>
-<p style="margin: 10px 0;">${post.content}</p>
-${post.image ? `<img src="${post.image}" style="width: 100%; border-radius: 10px; margin-top: 10px;">` : ""}
-<div class="post-action">
-<span>❤️ ${post.likes || 0}</span>
-<span>💬 ${post.comments ? Object.keys(post.comments).length : 0} คอมเมนต์</span>
-</div>
-</div>`;
-resultsContainer.insertAdjacentHTML('afterbegin', html);
-}
+mBtn.addEventListener('touchmove', (e) => {
+isDragging = true;
+let touch = e.targetTouches[0];
+mBtn.style.left = (touch.pageX - 25) + 'px';
+mBtn.style.top = (touch.pageY - 25) + 'px';
 });
+mBtn.addEventListener('touchend', () => { setTimeout(() => { isDragging = false; }, 100); });
 
-if (!found) {
-resultsContainer.innerHTML = '<p style="text-align: center; color: var(--text-dim); margin-top: 20px;">ไม่พบโพสต์ที่เกี่ยวข้องกับ "' + keyword + '"</p>';
-}
-}, { onlyOnce: true });
-};
-        
-// พิมพ์แล้วค้นหาทันทีไม่ต้องกดปุ่ม
-document.getElementById('searchInput')?.addEventListener('input', () => {
-startSearch();
-});
-        
-window.viewPhoto = (src) => {
-const photoPage = document.getElementById('photo-page');
-const fullImg = document.getElementById('full-photo');
-fullImg.src = src;
-photoPage.style.display = 'block';
-};
-
-window.closePhoto = () => {
-document.getElementById('photo-page').style.display = 'none';
-};
-
-// ดักเหตุการณ์กดย้อนกลับ
-window.addEventListener('popstate', function(event) {
-// แสดงป๊อปอัพ
-document.getElementById('exit-modal').style.display = 'flex';
-// ดัน state กลับเข้าไปเพื่อไม่ให้แอปปิดทันที
-history.pushState(null, null, window.location.pathname);
-});
-
-// ดัน state เริ่มต้นไว้ตอนเปิดแอป
-history.pushState(null, null, window.location.pathname);
-
-window.exitApp = () => {
-// ถ้าเป็นแอปจริงๆ จะปิดไม่ได้ง่ายๆ แต่จะส่งไปหน้า Google แทน
-window.location.href = "https://www.google.com";
-};
-
-window.stayApp = () => {
-document.getElementById('exit-modal').style.display = 'none';
-};
-
-window.addEventListener('scroll', () => {
-const header = document.querySelector('.main-header');
-if (window.scrollY > 50) {
-header.classList.add('shrink');
-} else {
-header.classList.remove('shrink');
-}
-});
-
-import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-const auth = getAuth();
-const googleProvider = new GoogleAuthProvider();
-const ADMIN_EMAIL = "krpooza0610@gmail.com";
-
-// ตรวจสอบสถานะการล็อคอิน
+// --- 8. สถานะ Auth และโปรไฟล์ ---
 onAuthStateChanged(auth, async (user) => {
 const loginOverlay = document.getElementById('login-overlay');
 if (user) {
@@ -860,54 +660,26 @@ if (loginOverlay) loginOverlay.style.display = 'flex';
 }
 });
 
-// 6. ฟังก์ชันพื้นฐานอื่นๆ
-window.loginGoogle = () => signInWithPopup(auth, googleProvider);
-window.loginGuest = () => signInAnonymously(auth);
-window.logout = () => signOut(auth).then(() => location.reload());
-
-// 3. ระบบจัดการสถานะผู้ใช้และโปรไฟล์
 window.updateProfileUI = async (user) => {
 const profilePage = document.getElementById('profile-page');
 if (!profilePage) return;
-const isAdmin = user.email === ADMIN_EMAIL;
 let photoURL = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 try {
-const snapshot = await get(ref(db, 'users/' + user.uid + '/profilePic'));
-if (snapshot.exists()) photoURL = snapshot.val();
-else photoURL = user.photoURL || photoURL;
-} catch (e) { console.log("Photo error:", e); }
-
-const displayName = user.displayName || "นักอ่านนิรนาม";
+const snap = await get(ref(db, 'users/' + user.uid + '/profilePic'));
+photoURL = snap.exists() ? snap.val() : (user.photoURL || photoURL);
+} catch (e) { console.log(e); }
 
 profilePage.innerHTML = `
-<div class="welcome-box" style="margin-top: 20px;">
-<div style="position: relative; display: inline-block;">
-<img src="${photoURL}" id="user-avatar" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--primary); object-fit: cover;">
-<input type="file" id="avatarInput" hidden accept="image/*" onchange="window.handlePhotoChange(event)">
-<button onclick="document.getElementById('avatarInput').click()" style="position: absolute; bottom: 0; right: 0; background: var(--accent); border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">📸</button>
-</div>
-<h2 style="margin-top: 15px;">${user.displayName || 'นักอ่านนิรนาม'} ${isAdmin ? '✅' : ''}</h2>
-<p style="color: var(--text-dim); font-size: 12px; margin-bottom: 20px;">${user.email || 'บัญชี Guest'}</p>
-<div style="display: flex; flex-direction: column; gap: 10px;">
-<button onclick="changeName()" style="background: var(--glass); color: white; border: 1px solid var(--glass); padding: 12px; border-radius: 12px; cursor: pointer;">📝 เปลี่ยนชื่อ (ได้ 1 ครั้ง)</button>
-<button onclick="logout()" style="background: #ff4b2b; color: white; border: none; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: bold;">ออกจากระบบ</button>
-</div>
+<div class="welcome-box">
+<img src="${photoURL}" id="user-avatar" style="width:100px; height:100px; border-radius:50%; object-fit:cover;">
+<input type="file" id="avatarInput" hidden onchange="window.handlePhotoChange(event)">
+<button onclick="document.getElementById('avatarInput').click()">📸</button>
+<h2>${user.displayName || 'นักอ่านนิรนาม'}</h2>
+<button onclick="changeName()">📝 เปลี่ยนชื่อ</button>
+<button onclick="logout()" style="background:#ff4b2b;">ออกจากระบบ</button>
 </div>`;
 };
 
-window.changeName = async () => {
-if (localStorage.getItem('nameChanged_' + auth.currentUser.uid)) {
-alert("เปลี่ยนได้แค่ครั้งเดียวครับ!"); return;
-}
-const newName = prompt("ระบุชื่อใหม่:");
-if (newName && newName.trim()) {
-await updateProfile(auth.currentUser, { displayName: newName });
-localStorage.setItem('nameChanged_' + auth.currentUser.uid, true);
-location.reload();
-}
-};
-
-// 4. ระบบเปลี่ยนรูปโปรไฟล์ (ย่อขนาดและบันทึก)
 window.handlePhotoChange = async (event) => {
 const file = event.target.files[0];
 if (!file) return;
@@ -916,61 +688,37 @@ reader.onload = (e) => {
 const img = new Image();
 img.onload = async () => {
 const canvas = document.createElement('canvas');
-const max_size = 400;
-let width = img.width, height = img.height;
-if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } }
-else { if (height > max_size) { width *= max_size / height; height = max_size; } }
-canvas.width = width; canvas.height = height;
 const ctx = canvas.getContext('2d');
-ctx.drawImage(img, 0, 0, width, height);
-const compressedData = canvas.toDataURL('image/jpeg', 0.6);
-try {
-await set(ref(db, 'users/' + auth.currentUser.uid + '/profilePic'), compressedData);
-document.getElementById('user-avatar').src = compressedData;
-alert("เปลี่ยนรูปโปรไฟล์แล้วครับภู!");
-} catch (err) { alert("Error: " + err.message); }
+canvas.width = 400; canvas.height = 400;
+ctx.drawImage(img, 0, 0, 400, 400);
+const compressed = canvas.toDataURL('image/jpeg', 0.6);
+await set(ref(db, 'users/' + auth.currentUser.uid + '/profilePic'), compressed);
+document.getElementById('user-avatar').src = compressed;
 };
 img.src = e.target.result;
 };
 reader.readAsDataURL(file);
 };
 
-// 5. ระบบโพสต์ (Feed)
-const postsRef = ref(db, 'posts');
-window.createPost = () => {
-const content = document.getElementById('post-input').value;
-if (!content.trim()) return;
-push(postsRef, {
-content: content,
-author: auth.currentUser.displayName || "นักอ่านนิรนาม",
-uid: auth.currentUser.uid,
-timestamp: Date.now(),
-likes: 0
-}).then(() => {
-document.getElementById('post-input').value = '';
-}).catch(err => alert(err.message));
+window.loginGoogle = () => signInWithPopup(auth, googleProvider);
+window.loginGuest = () => signInAnonymously(auth);
+window.logout = () => signOut(auth).then(() => location.reload());
+window.changeName = async () => {
+const newName = prompt("ระบุชื่อใหม่:");
+if (newName) {
+await updateProfile(auth.currentUser, { displayName: newName });
+location.reload();
+}
 };
 
-onValue(postsRef, (snapshot) => {
-const feed = document.getElementById('feed');
-if (!feed) return;
-feed.innerHTML = '';
-const data = snapshot.val();
-if (data) {
-Object.keys(data).reverse().forEach(key => {
-const post = data[key];
-const date = new Date(post.timestamp).toLocaleString();
-feed.innerHTML += `
-<div class="post-card">
-<div class="post-header">
-<strong>${post.author}</strong>
-<small>${date}</small>
-</div>
-<div class="post-content">${post.content}</div>
-</div>`;
-});
-}
-});
+// --- 9. ฟังก์ชันจิปาถะ ---
+window.viewPhoto = (src) => {
+const photoPage = document.getElementById('photo-page');
+document.getElementById('full-photo').src = src;
+photoPage.style.display = 'block';
+};
+window.closePhoto = () => document.getElementById('photo-page').style.display = 'none';
+window.quickPost = () => { showPage('home-page'); document.getElementById('postInput').focus(); };
 </script>
 </body>
 </html>
