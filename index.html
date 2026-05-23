@@ -545,8 +545,11 @@ btn.disabled = false;
 btn.innerText = "โพสต์";
 };
 
-// --- 4.0.1 ระบบช่วย(เขาว่างั้น) ---
-// 1.1 เพิ่มระบบ Double Tap และแก้ไลก์หน้าฟีด
+// --- 1. ระบบช่วย & ตัวแปรส่วนกลาง ---
+const myLikes = new Set();
+let scrollPos = 0;
+
+// 1.1 ฟังก์ชันวาดโพสต์ (มี Double Tap และระบบจำ Scroll)
 window.renderPost = (id, p, container) => {
 let lastTap = 0;
 const html = `
@@ -555,23 +558,41 @@ const html = `
 <p style="margin:10px 0;">${p.content}</p>
 ${p.image ? `<img src="${p.image}" class="post-img" style="width:100%; border-radius:10px;">` : ""}
 <div class="post-action" onclick="event.stopPropagation()">
-<span onclick="likePost('${id}')" id="like-f-${id}">❤️ ${p.likes || 0}</span>
+<span onclick="window.likePost('${id}')" id="like-count-${id}">❤️ ${p.likes || 0}</span>
 <span>💬 ${p.comments ? Object.keys(p.comments).length : 0}</span>
 </div></div>`;
 container.insertAdjacentHTML('afterbegin', html);
 
-// ระบบ Double Tap ที่รูปภาพ
 const postImg = container.querySelector(`#post-${id} .post-img`);
 if(postImg) {
 postImg.addEventListener('touchend', (e) => {
 const now = Date.now();
-if(now - lastTap < 300) { likePost(id); }
+if(now - lastTap < 300) { window.likePost(id); }
 lastTap = now;
 });
 }
 };
-    
-// --- 4.1 หมวดหมู่ ---
+
+// --- 2. ระบบกันออก (แก้ให้ทำงานทุกหน้า) ---
+window.addEventListener('popstate', () => {
+document.getElementById('exit-modal').style.display = 'flex';
+history.pushState(null, null, window.location.pathname);
+});
+history.pushState(null, null, window.location.pathname);
+
+window.stayApp = () => { document.getElementById('exit-modal').style.display = 'none'; };
+window.exitApp = () => { window.location.href = "https://www.google.com"; };
+
+// --- 3. ระบบนำทาง & ฟีด ---
+window.showPage = (pageId) => {
+document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+const targetPage = document.getElementById(pageId);
+if (targetPage) targetPage.classList.add('active');
+const nav = document.querySelector(`[onclick="showPage('${pageId}')"]`);
+if (nav) nav.classList.add('active');
+};
+
 window.filterFeed = (cat) => {
 onValue(postsRef, (snap) => {
 const container = document.getElementById('feed-container');
@@ -579,247 +600,20 @@ if(!container) return;
 container.innerHTML = "";
 snap.forEach(child => {
 const p = child.val();
-if(cat === 'ทั้งหมด' || p.category === cat){
-// เรียกใช้ฟังก์ชันวาดโพสต์ (ต้องมีฟังก์ชัน renderPost ในข้อ 6)
-window.renderPost(child.key, p, container);
-}
+if(cat === 'ทั้งหมด' || p.category === cat) window.renderPost(child.key, p, container);
 });
 }, {onlyOnce: true});
 };
 
-// --- 5. ระบบ Feed และนำทาง ---
 onValue(postsRef, (snapshot) => {
 const container = document.getElementById('feed-container');
-if (!container) return;
+if (container && !document.getElementById('search-page').classList.contains('active')) {
 container.innerHTML = "";
-snapshot.forEach((childSnapshot) => {
-const post = childSnapshot.val();
-const postId = childSnapshot.key;
-const html = `<div class="post-card" onclick="openPostDetail('${postId}')" style="cursor: pointer;">
-<small style="color: var(--accent);">${post.category}</small>
-<p style="margin: 10px 0;">${post.content}</p>
-${post.image ? `<img src="${post.image}" style="width: 100%; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1);">` : ""}
-<div class="post-action" onclick="event.stopPropagation()">
-<span onclick="likePost('${postId}')">❤️ ${post.likes || 0}</span>
-<span onclick="openPostDetail('${postId}')">💬 ${post.comments ? Object.keys(post.comments).length : 0} คอมเมนต์</span>
-</div></div>`;
-container.insertAdjacentHTML('afterbegin', html);
-});
-});
-
-window.showPage = (pageId) => {
-document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-const targetPage = document.getElementById(pageId);
-if (targetPage) targetPage.classList.add('active');
-const activeNav = document.querySelector(`[onclick="showPage('${pageId}')"]`);
-if (activeNav) activeNav.classList.add('active');
-};
-
-// --- 5.1 กันออก ---
-window.addEventListener('popstate', () => {
-document.getElementById('exit-modal').style.display = 'flex';
-history.pushState(null, null, window.location.pathname);
-});
-history.pushState(null, null, window.location.pathname);
-
-// 1.2 แก้ปัญหาไถฟีดแล้วเด้งขึ้นบน (ใช้บันทึกค่า Scroll)
-let scrollPos = 0;
-window.openPostDetail = (id) => {
-scrollPos = window.scrollY; // จำที่อยู่ล่าสุดไว้
-// ... (โค้ดดึงข้อมูลปกติ) ...
-};
-
-window.closePostDetail = () => {
-window.showPage('home-page');
-setTimeout(() => { window.scrollTo(0, scrollPos); }, 100); // พอกดปิดให้เลื่อนไปที่เดิม
-};
-
-// แก้ระบบไลก์ในหน้า Detail ไม่ให้บวกมั่ว
-window.likePost = (id) => {
-if (myLikes.has(id)) {
-myLikes.delete(id);
-runTransaction(ref(db, `posts/${id}/likes`), c => (c || 1) - 1);
-} else {
-myLikes.add(id);
-runTransaction(ref(db, `posts/${id}/likes`), c => (c || 0) + 1);
-}
-};
-const postRef = ref(db, `posts/${postId}`);
-    
-// --- 5.1.1 ทำให้ปุ่มในกันออกกดได้ ---
-window.stayApp = () => {
-document.getElementById('exit-modal').style.display = 'none';
-};
-window.exitApp = () => {
-window.location.href = "https://www.google.com";
-};
-// --- 5.2 ระบบไล ---
-const myLikes = new Set(); 
-window.likePost = (id) => {
-const likeRef = ref(db, `posts/${id}/likes`);
-runTransaction(likeRef, (curr) => {
-if (myLikes.has(id)) {
-myLikes.delete(id);
-return (curr || 1) - 1;
-} else {
-myLikes.add(id);
-return (curr || 0) + 1;
-}
-});
-};
-window.likeComment = (pId, cId) => {
-runTransaction(ref(db, `posts/${pId}/comments/${cId}/likes`), c => (c || 0) + 1);
-};
-onValue(postRef, (snapshot) => {
-const post = snapshot.val();
-if (!post) return;
-showPage('post-detail-page');
-let commentHtml = "";
-if (post.comments) {
-Object.entries(post.comments).forEach(([commentId, cmt]) => {
-commentHtml += `
-<div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 10px; border-left: 3px solid var(--primary);">
-<div style="display: flex; justify-content: space-between; align-items: center;">
-<div style="font-weight: bold; color: var(--accent); font-size: 13px;">${cmt.author}</div>
-<div onclick="likeComment('${postId}', '${commentId}')" style="cursor: pointer; font-size: 12px; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 15px;">❤️ ${cmt.likes || 0}</div>
-</div>
-<div style="font-size: 14px; margin-top: 5px;">${cmt.text}</div></div>`;
-});
-}
-document.getElementById('detail-category').innerText = post.category;
-document.getElementById('detail-content-area').innerHTML = `
-<div class="post-card" style="background: none; border: none; padding: 0;">
-<p style="font-size: 18px; margin-bottom: 15px; line-height: 1.6;">${post.content}</p>
-${post.image ? `<img src="${post.image}" onclick="viewPhoto('${post.image}')" style="width: 100%; border-radius: 10px; margin-top: 10px; cursor: pointer;">` : ""}
-<div style="display: flex; gap: 20px; border-bottom: 1px solid var(--glass); padding-bottom: 15px; margin-bottom: 20px;">
-<span onclick="likePost('${postId}')" style="font-size: 16px; cursor: pointer;">❤️ ${post.likes || 0} ไลก์</span>
-<span style="font-size: 16px; color: var(--text-dim);">💬 ${post.comments ? Object.keys(post.comments).length : 0} คอมเมนต์</span>
-</div>
-<div id="detail-comment-list">${commentHtml}</div>
-<div style="display: flex; gap: 10px; margin-top: 20px; position: sticky; bottom: 10px; background: var(--bg-dark); padding: 10px 0;">
-<input type="text" id="detail-comment-input" placeholder="เขียนคอมเมนต์..." style="flex: 1; background: var(--glass); border: 1px solid white; color: white; border-radius: 20px; padding: 10px 15px;">
-<button onclick="addDetailComment('${postId}')" style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 20px;">ส่ง</button>
-</div></div>`;
-}, { onlyOnce: true });
-};
-
-// --- 6. ระบบไลก์และคอมเมนต์ ---
-const myLikes = new Set();
-window.likePost = (id) => {
-runTransaction(ref(db, `posts/${id}/likes`), (current) => (current || 0) + 1);
-};
-
-window.addDetailComment = (postId) => {
-const input = document.getElementById('detail-comment-input');
-if (input.value.trim()) {
-push(ref(db, `posts/${postId}/comments`), {
-author: auth.currentUser ? auth.currentUser.displayName : "ภู",
-text: input.value,
-likes: 0,
-date: new Date().toLocaleString('th-TH')
-});
-input.value = "";
-openPostDetail(postId);
-}
-};
-
-// --- 7. ระบบเพลงและ Dragปุ่ม ---
-const mBtn = document.getElementById('musicBtn');
-const music = document.getElementById('bgMusic');
-const icon = document.getElementById('musicIcon');
-let isDragging = false;
-
-window.toggleMusic = () => {
-if (isDragging) return;
-if (music.paused) { music.play(); icon.innerText = "⏸️"; mBtn.classList.add('music-playing'); }
-else { music.pause(); icon.innerText = "🎵"; mBtn.classList.remove('music-playing'); }
-};
-
-mBtn.addEventListener('touchmove', (e) => {
-isDragging = true;
-let touch = e.targetTouches[0];
-mBtn.style.left = (touch.pageX - 25) + 'px';
-mBtn.style.top = (touch.pageY - 25) + 'px';
-});
-mBtn.addEventListener('touchend', () => { setTimeout(() => { isDragging = false; }, 100); });
-
-// --- 8. สถานะ Auth และโปรไฟล์รวมครบจบในตัวเดียว ---
-// 4.1 แก้ให้โหลดครั้งเดียวจบ ไม่เปลี่ยนไปมา
-onAuthStateChanged(auth, async (user) => {
-if (user) {
-const snap = await get(ref(db, 'users/' + user.uid + '/profilePic'));
-let photo = snap.exists() ? snap.val() : (user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png");
-updateProfileHTML(user, photo);
+snapshot.forEach((child) => window.renderPost(child.key, child.val(), container));
 }
 });
 
-function updateProfileHTML(user, photo) {
-const profilePage = document.getElementById('profile-page');
-if(!profilePage) return;
-profilePage.innerHTML = `
-<div class="welcome-box">
-<div class="avatar-container" style="position:relative;">
-<img src="${photo}" id="user-avatar" style="width:120px; height:120px; border-radius:50%; object-fit:cover; transition: 0.3s;">
-<input type="file" id="avatarInput" hidden onchange="window.handlePhotoChange(event)">
-</div>
-<div style="margin-top:10px;">
-<button onclick="rotateImg()" style="background:var(--glass); color:white; padding:5px 10px; border-radius:10px; font-size:12px;">🔄 หมุนรูป</button>
-<button onclick="document.getElementById('avatarInput').click()" style="background:var(--accent); color:black; padding:5px 10px; border-radius:10px; font-size:12px;">📸 เปลี่ยนรูป</button>
-</div>
-<h2>${user.displayName || 'นักอ่านนิรนาม'}</h2>
-<button onclick="changeName()">📝 เปลี่ยนชื่อ</button>
-<button onclick="logout()" style="background:#ff4b2b;">ออกจากระบบ</button>
-</div>`;
-}
-
-// 4.2 ระบบหมุนรูปภาพ
-let currentRotation = 0;
-window.rotateImg = () => {
-currentRotation += 90;
-document.getElementById('user-avatar').style.transform = `rotate(${currentRotation}deg)`;
-};
-
-window.handlePhotoChange = async (event) => {
-const file = event.target.files[0];
-if (!file) return;
-const reader = new FileReader();
-reader.onload = (e) => {
-const img = new Image();
-img.onload = async () => {
-const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d');
-canvas.width = 400; canvas.height = 400;
-ctx.drawImage(img, 0, 0, 400, 400);
-const compressed = canvas.toDataURL('image/jpeg', 0.6);
-await set(ref(db, 'users/' + auth.currentUser.uid + '/profilePic'), compressed);
-document.getElementById('user-avatar').src = compressed;
-};
-img.src = e.target.result;
-};
-reader.readAsDataURL(file);
-};
-
-window.loginGoogle = () => signInWithPopup(auth, googleProvider);
-window.loginGuest = () => signInAnonymously(auth);
-window.logout = () => signOut(auth).then(() => location.reload());
-window.changeName = async () => {
-const newName = prompt("ระบุชื่อใหม่:");
-if (newName) {
-await updateProfile(auth.currentUser, { displayName: newName });
-location.reload();
-}
-};
-
-// --- 9. ฟังก์ชันจิปาถะ ---
-window.viewPhoto = (src) => {
-const photoPage = document.getElementById('photo-page');
-document.getElementById('full-photo').src = src;
-photoPage.style.display = 'block';
-};
-window.closePhoto = () => document.getElementById('photo-page').style.display = 'none';
-window.quickPost = () => { showPage('home-page'); document.getElementById('postInput').focus(); };
-// --- 10. ระบบค้นหา ---
+// --- 4. ระบบค้นหา (แก้ไขให้แสดงผล) ---
 window.startSearch = () => {
 const key = document.getElementById('searchInput').value.toLowerCase();
 const res = document.getElementById('search-results');
@@ -828,14 +622,126 @@ onValue(postsRef, (snap) => {
 res.innerHTML = "";
 snap.forEach(child => {
 const p = child.val();
-if(p.content.toLowerCase().includes(key) || p.category.toLowerCase().includes(key)){
-window.renderPost(child.key, p, res); // ใช้ renderPost ตัวเดียวกันกับหน้าฟีด
-}
+if(p.content.toLowerCase().includes(key) || p.category.toLowerCase().includes(key)) window.renderPost(child.key, p, res);
 });
 }, {onlyOnce: true});
 };
-// บรรทัดนี้สำคัญ: ทำให้พิมพ์แล้วค้นหาทันที
 document.getElementById('searchInput')?.addEventListener('input', window.startSearch);
+
+// --- 5. ระบบไลก์ (แบบสมจริง 0-1-0 และคอมเมนต์) ---
+window.likePost = (id) => {
+const likeRef = ref(db, `posts/${id}/likes`);
+runTransaction(likeRef, (curr) => {
+if (myLikes.has(id)) { myLikes.delete(id); return (curr || 1) - 1; }
+else { myLikes.add(id); return (curr || 0) + 1; }
+});
+};
+
+window.likeComment = (pId, cId) => {
+runTransaction(ref(db, `posts/${pId}/comments/${cId}/likes`), c => (c || 0) + 1);
+};
+
+// --- 6. รายละเอียดโพสต์ (แก้เด้งขึ้นบน & ไลก์หน้าใน) ---
+window.openPostDetail = (id) => {
+scrollPos = window.scrollY; // จำตำแหน่งฟีด
+onValue(ref(db, `posts/${id}`), (snap) => {
+const p = snap.val(); if (!p) return;
+window.showPage('post-detail-page');
+let cmtHtml = "";
+if (p.comments) Object.entries(p.comments).forEach(([cid, cmt]) => {
+cmtHtml += `<div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:10px; margin-bottom:10px;">
+<div style="display:flex; justify-content:space-between;">
+<span style="color:var(--accent); font-weight:bold;">${cmt.author}</span>
+<span onclick="window.likeComment('${id}','${cid}')">❤️ ${cmt.likes || 0}</span>
+</div><p>${cmt.text}</p></div>`;
+});
+document.getElementById('detail-content-area').innerHTML = `
+<p style="font-size:18px; margin-bottom:15px;">${p.content}</p>
+${p.image ? `<img src="${p.image}" style="width:100%; border-radius:10px;">` : ""}
+<div style="margin:15px 0;"><span onclick="window.likePost('${id}')" style="cursor:pointer;">❤️ ${p.likes || 0} ไลก์</span></div>
+<div id="detail-comment-list">${cmtHtml}</div>
+<div style="display:flex; gap:10px; margin-top:20px;">
+<input type="text" id="detail-comment-input" placeholder="เขียนคอมเมนต์..." style="flex:1; padding:10px; border-radius:20px; background:var(--glass); color:white; border:1px solid white;">
+<button onclick="window.addDetailComment('${id}')" style="background:var(--primary); color:white; padding:10px 20px; border-radius:20px;">ส่ง</button>
+</div>`;
+});
+};
+
+window.closePostDetail = () => {
+window.showPage('home-page');
+setTimeout(() => { window.scrollTo(0, scrollPos); }, 100);
+};
+
+window.addDetailComment = (id) => {
+const input = document.getElementById('detail-comment-input');
+if (input.value.trim()) {
+push(ref(db, `posts/${id}/comments`), { author: auth.currentUser.displayName || "ภู", text: input.value, likes: 0 });
+input.value = "";
+}
+};
+
+// --- 7. ระบบโปรไฟล์ & รูปภาพ (หมุนรูปได้/เปลี่ยนได้ครั้งเดียว) ---
+onAuthStateChanged(auth, async (user) => {
+if (user) {
+const snap = await get(ref(db, 'users/' + user.uid + '/profilePic'));
+let photo = snap.exists() ? snap.val() : (user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png");
+updateProfileHTML(user, photo);
+}
+});
+
+let currentRotation = 0;
+function updateProfileHTML(user, photo) {
+const profilePage = document.getElementById('profile-page');
+if(!profilePage) return;
+profilePage.innerHTML = `
+<div class="welcome-box">
+<img src="${photo}" id="user-avatar" style="width:120px; height:120px; border-radius:50%; object-fit:cover; transition:0.3s; border:3px solid var(--primary);">
+<div style="margin:15px 0;">
+<button onclick="window.rotateImg()" style="background:var(--glass); color:white; padding:8px 15px; border-radius:10px;">🔄 หมุนรูป</button>
+<button onclick="document.getElementById('avatarInput').click()" style="background:var(--accent); color:black; padding:8px 15px; border-radius:10px;">📸 เปลี่ยนรูป</button>
+<input type="file" id="avatarInput" hidden onchange="window.handlePhotoChange(event)">
+</div>
+<h2>${user.displayName || 'นักอ่านนิรนาม'}</h2>
+<div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+<button onclick="window.changeName()">📝 เปลี่ยนชื่อ (ครั้งเดียว)</button>
+<button onclick="window.logout()" style="background:#ff4b2b;">ออกจากระบบ</button>
+</div></div>`;
+}
+
+window.rotateImg = () => {
+currentRotation += 90;
+document.getElementById('user-avatar').style.transform = `rotate(${currentRotation}deg)`;
+};
+
+window.handlePhotoChange = async (event) => {
+const file = event.target.files[0]; if (!file) return;
+const reader = new FileReader();
+reader.onload = (e) => {
+const img = new Image();
+img.onload = async () => {
+const canvas = document.createElement('canvas');
+canvas.width = 400; canvas.height = 400;
+canvas.getContext('2d').drawImage(img, 0, 0, 400, 400);
+const data = canvas.toDataURL('image/jpeg', 0.6);
+await set(ref(db, 'users/' + auth.currentUser.uid + '/profilePic'), data);
+document.getElementById('user-avatar').src = data;
+}; img.src = e.target.result;
+}; reader.readAsDataURL(file);
+};
+
+window.changeName = async () => {
+if(localStorage.getItem('nc_'+auth.currentUser.uid)) return alert("เปลี่ยนได้ครั้งเดียวครับ");
+const n = prompt("ระบุชื่อใหม่:");
+if(n){ await updateProfile(auth.currentUser, {displayName: n}); localStorage.setItem('nc_'+auth.currentUser.uid, '1'); location.reload(); }
+};
+
+// --- 8. ฟังก์ชันเสริมอื่นๆ ---
+window.loginGoogle = () => signInWithPopup(auth, googleProvider);
+window.loginGuest = () => signInAnonymously(auth);
+window.logout = () => signOut(auth).then(() => location.reload());
+window.quickPost = () => { window.showPage('home-page'); document.getElementById('postInput').focus(); };
+window.viewPhoto = (src) => { document.getElementById('full-photo').src = src; document.getElementById('photo-page').style.display='block'; };
+window.closePhoto = () => document.getElementById('photo-page').style.display='none';
 </script>
 </body>
 </html>
