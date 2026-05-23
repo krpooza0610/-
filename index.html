@@ -544,15 +544,31 @@ document.getElementById('file-name').innerText = "ยังไม่ได้เ
 btn.disabled = false;
 btn.innerText = "โพสต์";
 };
+
+// --- 4.0.1 ระบบช่วย(เขาว่างั้น) ---
+window.renderPost = (id, p, container) => {
+const html = `<div class="post-card" onclick="openPostDetail('${id}')">
+<small style="color:var(--accent);">${p.category}</small>
+<p style="margin:10px 0;">${p.content}</p>
+${p.image ? `<img src="${p.image}" style="width:100%; border-radius:10px; margin-top:5px;">` : ""}
+<div class="post-action" onclick="event.stopPropagation()">
+<span onclick="likePost('${id}')">❤️ ${p.likes || 0}</span>
+<span onclick="openPostDetail('${id}')">💬 ${p.comments ? Object.keys(p.comments).length : 0}</span>
+</div></div>`;
+container.insertAdjacentHTML('afterbegin', html);
+};
+    
 // --- 4.1 หมวดหมู่ ---
 window.filterFeed = (cat) => {
-const container = document.getElementById('feed-container');
 onValue(postsRef, (snap) => {
+const container = document.getElementById('feed-container');
+if(!container) return;
 container.innerHTML = "";
 snap.forEach(child => {
 const p = child.val();
 if(cat === 'ทั้งหมด' || p.category === cat){
-renderPost(child.key, p, container);
+// เรียกใช้ฟังก์ชันวาดโพสต์ (ต้องมีฟังก์ชัน renderPost ในข้อ 6)
+window.renderPost(child.key, p, container);
 }
 });
 }, {onlyOnce: true});
@@ -596,9 +612,26 @@ history.pushState(null, null, window.location.pathname);
 
 window.openPostDetail = (postId) => {
 const postRef = ref(db, `posts/${postId}`);
+// --- 5.1.1 ทำให้ปุ่มในกันออกกดได้ ---
+window.stayApp = () => {
+document.getElementById('exit-modal').style.display = 'none';
+};
+window.exitApp = () => {
+window.location.href = "https://www.google.com";
+};
 // --- 5.2 ระบบไล ---
+const myLikes = new Set(); 
 window.likePost = (id) => {
-runTransaction(ref(db, `posts/${id}/likes`), c => (c || 0) + 1);
+const likeRef = ref(db, `posts/${id}/likes`);
+runTransaction(likeRef, (curr) => {
+if (myLikes.has(id)) {
+myLikes.delete(id);
+return (curr || 1) - 1;
+} else {
+myLikes.add(id);
+return (curr || 0) + 1;
+}
+});
 };
 window.likeComment = (pId, cId) => {
 runTransaction(ref(db, `posts/${pId}/comments/${cId}/likes`), c => (c || 0) + 1);
@@ -676,27 +709,19 @@ mBtn.style.top = (touch.pageY - 25) + 'px';
 });
 mBtn.addEventListener('touchend', () => { setTimeout(() => { isDragging = false; }, 100); });
 
-// --- 8. สถานะ Auth และโปรไฟล์ ---
+// --- 8. สถานะ Auth และโปรไฟล์รวมครบจบในตัวเดียว ---
 onAuthStateChanged(auth, async (user) => {
 const loginOverlay = document.getElementById('login-overlay');
 if (user) {
 if (loginOverlay) loginOverlay.style.display = 'none';
-await window.updateProfileUI(user);
-} else {
-if (loginOverlay) loginOverlay.style.display = 'flex';
-}
-});
-
-// --- 8.1. หน้าโปรไฟร์ ---
-window.updateProfileUI = async (user) => {
 const profilePage = document.getElementById('profile-page');
 if (!profilePage) return;
 const isAdmin = user.email === ADMIN_EMAIL;
 let photoURL = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-try {
 const snap = await get(ref(db, 'users/' + user.uid + '/profilePic'));
-photoURL = snap.exists() ? snap.val() : (user.photoURL || photoURL);
-} catch (e) { console.log(e); }
+if (snap.exists()) photoURL = snap.val();
+else if (user.photoURL) photoURL = user.photoURL;
+
 profilePage.innerHTML = `
 <div class="welcome-box" style="margin-top:20px;">
 <div style="position:relative; display:inline-block;">
@@ -707,12 +732,15 @@ profilePage.innerHTML = `
 <h2>${user.displayName || 'นักอ่านนิรนาม'} ${isAdmin ? '✅' : ''}</h2>
 <p style="color:var(--text-dim); font-size:12px; margin-bottom:20px;">${user.email || 'บัญชี Guest'}</p>
 <div style="display:flex; flex-direction:column; gap:10px;">
-<button onclick="changeName()" style="background:var(--glass); color:white; border:1px solid var(--glass); padding:12px; border-radius:12px;">📝 เปลี่ยนชื่อ</button>
-<button onclick="logout()" style="background:#ff4b2b; color:white; border:none; padding:12px; border-radius:12px; font-weight:bold;">ออกจากระบบ</button>
-<button onclick="window.toggleAdminNotes()" style="background:var(--accent); color:black; border:none; padding:12px; border-radius:12px; font-weight:bold;">📒 สมุดบันทึกแอดมิน</button>
+<button onclick="changeName()" style="background:var(--glass); color:white; padding:12px; border-radius:12px; border:1px solid var(--glass);">📝 เปลี่ยนชื่อ</button>
+<button onclick="logout()" style="background:#ff4b2b; color:white; padding:12px; border-radius:12px; border:none; font-weight:bold;">ออกจากระบบ</button>
+${isAdmin ? `<button onclick="window.toggleAdminNotes()" style="background:var(--accent); color:black; padding:12px; border-radius:12px; border:none; font-weight:bold;">📒 สมุดบันทึกแอดมิน</button>` : ''}
 </div>
 </div>`;
-};
+} else {
+if (loginOverlay) loginOverlay.style.display = 'flex';
+}
+});
 
 window.handlePhotoChange = async (event) => {
 const file = event.target.files[0];
@@ -757,16 +785,18 @@ window.quickPost = () => { showPage('home-page'); document.getElementById('postI
 window.startSearch = () => {
 const key = document.getElementById('searchInput').value.toLowerCase();
 const res = document.getElementById('search-results');
+if(!res) return;
 onValue(postsRef, (snap) => {
 res.innerHTML = "";
 snap.forEach(child => {
 const p = child.val();
 if(p.content.toLowerCase().includes(key) || p.category.toLowerCase().includes(key)){
-renderPost(child.key, p, res);
+window.renderPost(child.key, p, res);
 }
 });
 }, {onlyOnce: true});
 };
+// บรรทัดนี้สำคัญ: ทำให้พิมพ์แล้วค้นหาทันที
 document.getElementById('searchInput')?.addEventListener('input', window.startSearch);
 </script>
 </body>
