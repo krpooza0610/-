@@ -547,6 +547,7 @@ btn.innerText = "โพสต์";
 
 // --- 1. ระบบช่วย & ตัวแปรส่วนกลาง ---
 const myLikes = new Set();
+const myCommentLikes = new Set();
 let scrollPos = 0;
 
 // 1.1 ฟังก์ชันวาดโพสต์ (มี Double Tap และระบบจำ Scroll)
@@ -651,7 +652,17 @@ else { myLikes.add(id); return (curr || 0) + 1; }
 };
 
 window.likeComment = (pId, cId) => {
-runTransaction(ref(db, `posts/${pId}/comments/${cId}/likes`), c => (c || 0) + 1);
+const cLikeRef = ref(db, `posts/${pId}/comments/${cId}/likes`);
+const uniqueId = pId + "_" + cId;
+runTransaction(cLikeRef, (curr) => {
+if (myCommentLikes.has(uniqueId)) {
+myCommentLikes.delete(uniqueId);
+return (curr || 1) - 1;
+} else {
+myCommentLikes.add(uniqueId);
+return (curr || 0) + 1;
+}
+});
 };
 
 // --- 6. รายละเอียดโพสต์ (แก้เด้งขึ้นบน & ไลก์หน้าใน) ---
