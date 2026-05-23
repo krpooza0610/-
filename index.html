@@ -555,17 +555,18 @@ let scrollPos = 0;
 
 // 1.1 ฟังก์ชันวาดโพสต์ (มี Double Tap และระบบจำ Scroll)
 window.renderPost = (id, p, container) => {
-let lastTap = 0;
 const html = `
-<div class="post-card" id="post-${id}" onclick="openPostDetail('${id}')">
+<div class="post-card" id="post-${id}">
 <small style="color:var(--accent);">${p.category}</small>
-<p style="margin:10px 0;">${p.content}</p>
-${p.image ? `<img src="${p.image}" class="post-img" style="width:100%; border-radius:10px;">` : ""}
+<p style="margin:10px 0;" onclick="openPostDetail('${id}')">${p.content}</p>
+${p.image ? `<img src="${p.image}" class="post-img" style="width:100%; border-radius:10px;" onclick="window.viewPhoto('${p.image}')">` : ""}
 <div class="post-action" onclick="event.stopPropagation()">
 <span onclick="window.likePost('${id}')" id="like-count-${id}">❤️ ${p.likes || 0}</span>
 <span>💬 ${p.comments ? Object.keys(p.comments).length : 0}</span>
-</div></div>`;
+</div>
+</div>`;
 container.insertAdjacentHTML('afterbegin', html);
+};
 
 const postImg = container.querySelector(`#post-${id} .post-img`);
 if(postImg) {
