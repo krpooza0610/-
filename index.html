@@ -775,18 +775,19 @@ window.isPlaying = false;
 
 // 2. ฟังก์ชันควบคุมเพลง (ปรับแก้ให้กดง่ายขึ้น)
 window.toggleMusic = () => {
-const music = window.bgMusic;
-if (window.isPlaying) {
-music.pause();
-window.isPlaying = false;
-alert("หยุดเพลงแล้วครับ");
-} else {
-music.play().then(() => {
-window.isPlaying = true;
-}).catch(e => {
-console.error("Browser บล็อกเพลง:", e);
-alert("กดปุ่มเพื่ออนุญาตให้เล่นเพลงนะครับ");
+const audio = document.getElementById('bgMusic');
+const icon = document.getElementById('musicIcon');
+if (!audio || !icon) return;
+
+if (audio.paused) {
+audio.play().then(() => {
+icon.innerText = "⏸️"; // เปลี่ยนเป็นรูปหยุดเมื่อเล่นเพลง
+}).catch((error) => {
+console.log("เล่นเพลงไม่ได้:", error);
 });
+} else {
+audio.pause();
+icon.innerText = "🎵"; // เปลี่ยนกลับเป็นรูปโน้ตเมื่อหยุดเพลง
 }
 };
 </script>
