@@ -803,63 +803,35 @@ document.getElementById('musicIcon').innerText = "⏸️";
 }, { once: true }); 
 // {once: true} หมายความว่าให้ทำงานแค่ครั้งแรกครั้งเดียวที่แตะจอครับ
 
-// ผูก Event ให้ปุ่มลอย: คลิกสั้นๆ ให้เปิดเพลง, ลากได้ด้วย
+// --- ชุดปุ่มอัจฉริยะ (จัดการทั้งลากและเปิด/ปิด) ---
 const btn = document.getElementById("musicBtn");
-let offsetX, offsetY;
+let touchStartTime = 0;
+let isMoving = false;
 
 btn.addEventListener("touchstart", (e) => {
-  isDragging = false;
-  let touch = e.touches[0];
-  offsetX = touch.clientX - btn.offsetLeft;
-  offsetY = touch.clientY - btn.offsetTop;
+  touchStartTime = Date.now();
+  isMoving = false;
+  // จำตำแหน่งเริ่มลาก
+  offsetX = e.touches[0].clientX - btn.offsetLeft;
+  offsetY = e.touches[0].clientY - btn.offsetTop;
 }, {passive: false});
 
 btn.addEventListener("touchmove", (e) => {
-  isDragging = true;
-  let touch = e.touches[0];
-  btn.style.left = (touch.clientX - offsetX) + "px";
-  btn.style.top = (touch.clientY - offsetY) + "px";
+  isMoving = true; // ถ้ามีการขยับนิ้ว ให้ถือว่าเป็นการลาก
+  btn.style.left = (e.touches[0].clientX - offsetX) + "px";
+  btn.style.top = (e.touches[0].clientY - offsetY) + "px";
   btn.style.right = "auto";
   e.preventDefault();
 }, {passive: false});
 
-// เพิ่ม Event สำหรับเมาส์เผื่อเช็กบนคอม
-btn.addEventListener("mousedown", (e) => {
-  isDragging = false;
-  offsetX = e.clientX - btn.offsetLeft;
-  offsetY = e.clientY - btn.offsetTop;
-  
-  const onMouseMove = (e) => {
-    isDragging = true;
-    btn.style.left = (e.clientX - offsetX) + "px";
-    btn.style.top = (e.clientY - offsetY) + "px";
-    btn.style.right = "auto";
-  };
-  
-  const stopDrag = () => {
-    document.removeEventListener("mousemove", onMouseMove);
-    document.removeEventListener("mouseup", stopDrag);
-  };
-  
-  document.addEventListener("mousemove", onMouseMove);
-  document.addEventListener("mouseup", stopDrag);
-});
-
-// ดักจังหวะยกนิ้วขึ้น ถ้าไม่ได้ลาก = เปิด/ปิดเพลง
 btn.addEventListener("touchend", (e) => {
-  if (!isDragging) {
+  const duration = Date.now() - touchStartTime;
+  // ถ้าแตะสั้นกว่า 200ms และไม่ได้ลาก = สั่งเปิด/ปิดเพลง
+  if (duration < 200 && !isMoving) {
     window.toggleMusic();
   }
-  isDragging = false; // รีเซ็ตสถานะ
-}, {passive: false});
-
-// ดักจังหวะปล่อยเมาส์ (สำหรับทดสอบบนคอม)
-btn.addEventListener("mouseup", (e) => {
-  if (!isDragging) {
-    window.toggleMusic();
-  }
-  isDragging = false;
 });
+// --- สิ้นสุดชุดปุ่มอัจฉริยะ ---
 
 let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 const dragElement = (elmnt) => {
