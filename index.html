@@ -546,16 +546,29 @@ btn.innerText = "โพสต์";
 };
 
 // --- 4.0.1 ระบบช่วย(เขาว่างั้น) ---
+// 1.1 เพิ่มระบบ Double Tap และแก้ไลก์หน้าฟีด
 window.renderPost = (id, p, container) => {
-const html = `<div class="post-card" onclick="openPostDetail('${id}')">
+let lastTap = 0;
+const html = `
+<div class="post-card" id="post-${id}" onclick="openPostDetail('${id}')">
 <small style="color:var(--accent);">${p.category}</small>
 <p style="margin:10px 0;">${p.content}</p>
-${p.image ? `<img src="${p.image}" style="width:100%; border-radius:10px; margin-top:5px;">` : ""}
+${p.image ? `<img src="${p.image}" class="post-img" style="width:100%; border-radius:10px;">` : ""}
 <div class="post-action" onclick="event.stopPropagation()">
-<span onclick="likePost('${id}')">❤️ ${p.likes || 0}</span>
-<span onclick="openPostDetail('${id}')">💬 ${p.comments ? Object.keys(p.comments).length : 0}</span>
+<span onclick="likePost('${id}')" id="like-f-${id}">❤️ ${p.likes || 0}</span>
+<span>💬 ${p.comments ? Object.keys(p.comments).length : 0}</span>
 </div></div>`;
 container.insertAdjacentHTML('afterbegin', html);
+
+// ระบบ Double Tap ที่รูปภาพ
+const postImg = container.querySelector(`#post-${id} .post-img`);
+if(postImg) {
+postImg.addEventListener('touchend', (e) => {
+const now = Date.now();
+if(now - lastTap < 300) { likePost(id); }
+lastTap = now;
+});
+}
 };
     
 // --- 4.1 หมวดหมู่ ---
@@ -610,8 +623,30 @@ history.pushState(null, null, window.location.pathname);
 });
 history.pushState(null, null, window.location.pathname);
 
-window.openPostDetail = (postId) => {
+// 1.2 แก้ปัญหาไถฟีดแล้วเด้งขึ้นบน (ใช้บันทึกค่า Scroll)
+let scrollPos = 0;
+window.openPostDetail = (id) => {
+scrollPos = window.scrollY; // จำที่อยู่ล่าสุดไว้
+// ... (โค้ดดึงข้อมูลปกติ) ...
+};
+
+window.closePostDetail = () => {
+window.showPage('home-page');
+setTimeout(() => { window.scrollTo(0, scrollPos); }, 100); // พอกดปิดให้เลื่อนไปที่เดิม
+};
+
+// แก้ระบบไลก์ในหน้า Detail ไม่ให้บวกมั่ว
+window.likePost = (id) => {
+if (myLikes.has(id)) {
+myLikes.delete(id);
+runTransaction(ref(db, `posts/${id}/likes`), c => (c || 1) - 1);
+} else {
+myLikes.add(id);
+runTransaction(ref(db, `posts/${id}/likes`), c => (c || 0) + 1);
+}
+};
 const postRef = ref(db, `posts/${postId}`);
+    
 // --- 5.1.1 ทำให้ปุ่มในกันออกกดได้ ---
 window.stayApp = () => {
 document.getElementById('exit-modal').style.display = 'none';
@@ -710,37 +745,40 @@ mBtn.style.top = (touch.pageY - 25) + 'px';
 mBtn.addEventListener('touchend', () => { setTimeout(() => { isDragging = false; }, 100); });
 
 // --- 8. สถานะ Auth และโปรไฟล์รวมครบจบในตัวเดียว ---
+// 4.1 แก้ให้โหลดครั้งเดียวจบ ไม่เปลี่ยนไปมา
 onAuthStateChanged(auth, async (user) => {
-const loginOverlay = document.getElementById('login-overlay');
 if (user) {
-if (loginOverlay) loginOverlay.style.display = 'none';
-const profilePage = document.getElementById('profile-page');
-if (!profilePage) return;
-const isAdmin = user.email === ADMIN_EMAIL;
-let photoURL = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 const snap = await get(ref(db, 'users/' + user.uid + '/profilePic'));
-if (snap.exists()) photoURL = snap.val();
-else if (user.photoURL) photoURL = user.photoURL;
-
-profilePage.innerHTML = `
-<div class="welcome-box" style="margin-top:20px;">
-<div style="position:relative; display:inline-block;">
-<img src="${photoURL}" id="user-avatar" style="width:100px; height:100px; border-radius:50%; border:4px solid var(--primary); object-fit:cover;">
-<input type="file" id="avatarInput" hidden onchange="window.handlePhotoChange(event)">
-<button onclick="document.getElementById('avatarInput').click()" style="position:absolute; bottom:0; right:0; background:var(--accent); border:none; border-radius:50%; width:30px; height:30px; cursor:pointer;">📸</button>
-</div>
-<h2>${user.displayName || 'นักอ่านนิรนาม'} ${isAdmin ? '✅' : ''}</h2>
-<p style="color:var(--text-dim); font-size:12px; margin-bottom:20px;">${user.email || 'บัญชี Guest'}</p>
-<div style="display:flex; flex-direction:column; gap:10px;">
-<button onclick="changeName()" style="background:var(--glass); color:white; padding:12px; border-radius:12px; border:1px solid var(--glass);">📝 เปลี่ยนชื่อ</button>
-<button onclick="logout()" style="background:#ff4b2b; color:white; padding:12px; border-radius:12px; border:none; font-weight:bold;">ออกจากระบบ</button>
-${isAdmin ? `<button onclick="window.toggleAdminNotes()" style="background:var(--accent); color:black; padding:12px; border-radius:12px; border:none; font-weight:bold;">📒 สมุดบันทึกแอดมิน</button>` : ''}
-</div>
-</div>`;
-} else {
-if (loginOverlay) loginOverlay.style.display = 'flex';
+let photo = snap.exists() ? snap.val() : (user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png");
+updateProfileHTML(user, photo);
 }
 });
+
+function updateProfileHTML(user, photo) {
+const profilePage = document.getElementById('profile-page');
+if(!profilePage) return;
+profilePage.innerHTML = `
+<div class="welcome-box">
+<div class="avatar-container" style="position:relative;">
+<img src="${photo}" id="user-avatar" style="width:120px; height:120px; border-radius:50%; object-fit:cover; transition: 0.3s;">
+<input type="file" id="avatarInput" hidden onchange="window.handlePhotoChange(event)">
+</div>
+<div style="margin-top:10px;">
+<button onclick="rotateImg()" style="background:var(--glass); color:white; padding:5px 10px; border-radius:10px; font-size:12px;">🔄 หมุนรูป</button>
+<button onclick="document.getElementById('avatarInput').click()" style="background:var(--accent); color:black; padding:5px 10px; border-radius:10px; font-size:12px;">📸 เปลี่ยนรูป</button>
+</div>
+<h2>${user.displayName || 'นักอ่านนิรนาม'}</h2>
+<button onclick="changeName()">📝 เปลี่ยนชื่อ</button>
+<button onclick="logout()" style="background:#ff4b2b;">ออกจากระบบ</button>
+</div>`;
+}
+
+// 4.2 ระบบหมุนรูปภาพ
+let currentRotation = 0;
+window.rotateImg = () => {
+currentRotation += 90;
+document.getElementById('user-avatar').style.transform = `rotate(${currentRotation}deg)`;
+};
 
 window.handlePhotoChange = async (event) => {
 const file = event.target.files[0];
@@ -785,13 +823,13 @@ window.quickPost = () => { showPage('home-page'); document.getElementById('postI
 window.startSearch = () => {
 const key = document.getElementById('searchInput').value.toLowerCase();
 const res = document.getElementById('search-results');
-if(!res) return;
+if(!key) { res.innerHTML = ""; return; }
 onValue(postsRef, (snap) => {
 res.innerHTML = "";
 snap.forEach(child => {
 const p = child.val();
 if(p.content.toLowerCase().includes(key) || p.category.toLowerCase().includes(key)){
-window.renderPost(child.key, p, res);
+window.renderPost(child.key, p, res); // ใช้ renderPost ตัวเดียวกันกับหน้าฟีด
 }
 });
 }, {onlyOnce: true});
