@@ -416,12 +416,11 @@ to { transform: scale(1); opacity: 1; }
 </div>
     
 <script type="module"> // ต้องใส่ type="module" เพื่อให้ใช้ import ได้
-    // 1. นำเข้า Library ของ Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getDatabase, ref, push, onValue, set, runTransaction, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// 1. คอนฟิก Firebase ของภู
+// 1. คอนฟิก Firebase (ใช้ตัวเดียวจบ)
 const firebaseConfig = {
 apiKey: "AIzaSyB6WVXMJFGYSChj4nkULqZa-8x-odUwEzE",
 authDomain: "manbodtip.firebaseapp.com",
@@ -432,20 +431,11 @@ messagingSenderId: "654202068900",
 appId: "1:654202068900:web:595437786bc69233fa6b31"
 };
 
-// 2. เริ่มต้นระบบ
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 const googleProvider = new GoogleAuthProvider();
 const ADMIN_EMAIL = "krpooza0610@gmail.com";
-
-                                                                                                    // --- ฟังก์ชันสลับหน้า (ย้ายมาไว้ข้างใน module) ---
-                                                                                                        window.showPage = (pageId, element) => {
-                                                                                                                document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-                                                                                                                        document.getElementById(pageId).style.display = 'block';
-                                                                                                                                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                                                                                                                                        element.classList.add('active');
-                                                                                                                                            };
 
                                                                                                                                                 // --- ระบบแชทสด (Firebase ของจริง) ---
                                                                                                                                                     window.sendMessage = () => {
@@ -681,13 +671,14 @@ const area = document.getElementById(`comments-${id}`);
 if (area) area.style.display = area.style.display === 'none' ? 'block' : 'none';
 };
 
+// 2. ระบบนำทาง (Menu Navigation)
 window.showPage = (pageId) => {
 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
 document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 const targetPage = document.getElementById(pageId);
-if(targetPage) targetPage.classList.add('active');
+if (targetPage) targetPage.classList.add('active');
 const activeNav = document.querySelector(`[onclick="showPage('${pageId}')"]`);
-if(activeNav) activeNav.classList.add('active');
+if (activeNav) activeNav.classList.add('active');
 };
 
 window.openPostDetail = (postId) => {
@@ -862,35 +853,29 @@ const ADMIN_EMAIL = "krpooza0610@gmail.com";
 onAuthStateChanged(auth, async (user) => {
 const loginOverlay = document.getElementById('login-overlay');
 if (user) {
-if(loginOverlay) loginOverlay.style.display = 'none';
+if (loginOverlay) loginOverlay.style.display = 'none';
 await window.updateProfileUI(user);
 } else {
-if(loginOverlay) loginOverlay.style.display = 'flex';
+if (loginOverlay) loginOverlay.style.display = 'flex';
 }
 });
 
-window.loginGoogle = () => signInWithPopup(auth, googleProvider).catch(err => alert(err.message));
-window.loginGuest = () => signInAnonymously(auth).catch(err => alert(err.message));
+// 6. ฟังก์ชันพื้นฐานอื่นๆ
+window.loginGoogle = () => signInWithPopup(auth, googleProvider);
+window.loginGuest = () => signInAnonymously(auth);
 window.logout = () => signOut(auth).then(() => location.reload());
 
+// 3. ระบบจัดการสถานะผู้ใช้และโปรไฟล์
 window.updateProfileUI = async (user) => {
 const profilePage = document.getElementById('profile-page');
 if (!profilePage) return;
-
 const isAdmin = user.email === ADMIN_EMAIL;
 let photoURL = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-
 try {
-// เช็ครูปจาก Database
 const snapshot = await get(ref(db, 'users/' + user.uid + '/profilePic'));
-if (snapshot.exists()) {
-photoURL = snapshot.val();
-} else {
-photoURL = user.photoURL || photoURL;
-}
-} catch (e) {
-console.error("Error fetching photo:", e);
-}
+if (snapshot.exists()) photoURL = snapshot.val();
+else photoURL = user.photoURL || photoURL;
+} catch (e) { console.log("Photo error:", e); }
 
 const displayName = user.displayName || "นักอ่านนิรนาม";
 
@@ -899,22 +884,20 @@ profilePage.innerHTML = `
 <div style="position: relative; display: inline-block;">
 <img src="${photoURL}" id="user-avatar" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--primary); object-fit: cover;">
 <input type="file" id="avatarInput" hidden accept="image/*" onchange="window.handlePhotoChange(event)">
-<button onclick="document.getElementById('avatarInput').click()" style="position: absolute; bottom: 0; right: 0; background: var(--accent); border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;">📸</button>
+<button onclick="document.getElementById('avatarInput').click()" style="position: absolute; bottom: 0; right: 0; background: var(--accent); border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">📸</button>
 </div>
-<h2 style="margin-top: 15px;">${displayName} ${isAdmin ? '✅' : ''}</h2>
+<h2 style="margin-top: 15px;">${user.displayName || 'นักอ่านนิรนาม'} ${isAdmin ? '✅' : ''}</h2>
 <p style="color: var(--text-dim); font-size: 12px; margin-bottom: 20px;">${user.email || 'บัญชี Guest'}</p>
 <div style="display: flex; flex-direction: column; gap: 10px;">
-<button onclick="changeName()" id="name-btn" style="background: var(--glass); color: white; border: 1px solid var(--glass); padding: 12px; border-radius: 12px; cursor: pointer;">📝 เปลี่ยนชื่อ (ได้ 1 ครั้ง)</button>
-${isAdmin ? `<button onclick="toggleAdminNotes()" class="welcome-box" style="background: rgba(255,215,0,0.1); border: 1px dashed var(--accent); color: var(--accent); padding: 12px; border-radius: 12px; width: 100%; margin: 0;">📑 เปิดสมุดบันทึกแอดมิน</button>` : ''}
-<button onclick="logout()" style="background: #ff4b2b; color: white; border: none; padding: 12px; border-radius: 12px; margin-top: 10px; cursor: pointer; font-weight: bold;">ออกจากระบบ</button>
+<button onclick="changeName()" style="background: var(--glass); color: white; border: 1px solid var(--glass); padding: 12px; border-radius: 12px; cursor: pointer;">📝 เปลี่ยนชื่อ (ได้ 1 ครั้ง)</button>
+<button onclick="logout()" style="background: #ff4b2b; color: white; border: none; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: bold;">ออกจากระบบ</button>
 </div>
 </div>`;
 };
 
 window.changeName = async () => {
 if (localStorage.getItem('nameChanged_' + auth.currentUser.uid)) {
-alert("เปลี่ยนได้แค่ครั้งเดียวนะครับ!");
-return;
+alert("เปลี่ยนได้แค่ครั้งเดียวครับ!"); return;
 }
 const newName = prompt("ระบุชื่อใหม่:");
 if (newName && newName.trim()) {
@@ -924,17 +907,17 @@ location.reload();
 }
 };
 
+// 4. ระบบเปลี่ยนรูปโปรไฟล์ (ย่อขนาดและบันทึก)
 window.handlePhotoChange = async (event) => {
 const file = event.target.files[0];
 if (!file) return;
 const reader = new FileReader();
-reader.onload = async (e) => {
+reader.onload = (e) => {
 const img = new Image();
 img.onload = async () => {
 const canvas = document.createElement('canvas');
 const max_size = 400;
-let width = img.width;
-let height = img.height;
+let width = img.width, height = img.height;
 if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } }
 else { if (height > max_size) { width *= max_size / height; height = max_size; } }
 canvas.width = width; canvas.height = height;
@@ -944,13 +927,50 @@ const compressedData = canvas.toDataURL('image/jpeg', 0.6);
 try {
 await set(ref(db, 'users/' + auth.currentUser.uid + '/profilePic'), compressedData);
 document.getElementById('user-avatar').src = compressedData;
-alert("เปลี่ยนรูปสำเร็จ!");
-} catch (error) { alert(error.message); }
+alert("เปลี่ยนรูปโปรไฟล์แล้วครับภู!");
+} catch (err) { alert("Error: " + err.message); }
 };
 img.src = e.target.result;
 };
 reader.readAsDataURL(file);
 };
+
+// 5. ระบบโพสต์ (Feed)
+const postsRef = ref(db, 'posts');
+window.createPost = () => {
+const content = document.getElementById('post-input').value;
+if (!content.trim()) return;
+push(postsRef, {
+content: content,
+author: auth.currentUser.displayName || "นักอ่านนิรนาม",
+uid: auth.currentUser.uid,
+timestamp: Date.now(),
+likes: 0
+}).then(() => {
+document.getElementById('post-input').value = '';
+}).catch(err => alert(err.message));
+};
+
+onValue(postsRef, (snapshot) => {
+const feed = document.getElementById('feed');
+if (!feed) return;
+feed.innerHTML = '';
+const data = snapshot.val();
+if (data) {
+Object.keys(data).reverse().forEach(key => {
+const post = data[key];
+const date = new Date(post.timestamp).toLocaleString();
+feed.innerHTML += `
+<div class="post-card">
+<div class="post-header">
+<strong>${post.author}</strong>
+<small>${date}</small>
+</div>
+<div class="post-content">${post.content}</div>
+</div>`;
+});
+}
+});
 </script>
 </body>
 </html>
