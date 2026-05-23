@@ -845,6 +845,22 @@ btn.addEventListener("mousedown", (e) => {
   document.addEventListener("mouseup", stopDrag);
 });
 
+// ดักจังหวะยกนิ้วขึ้น ถ้าไม่ได้ลาก = เปิด/ปิดเพลง
+btn.addEventListener("touchend", (e) => {
+  if (!isDragging) {
+    window.toggleMusic();
+  }
+  isDragging = false; // รีเซ็ตสถานะ
+}, {passive: false});
+
+// ดักจังหวะปล่อยเมาส์ (สำหรับทดสอบบนคอม)
+btn.addEventListener("mouseup", (e) => {
+  if (!isDragging) {
+    window.toggleMusic();
+  }
+  isDragging = false;
+});
+
 let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 const dragElement = (elmnt) => {
 elmnt.onmousedown = dragMouseDown;
