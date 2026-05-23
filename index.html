@@ -263,14 +263,15 @@ to { transform: scale(1); opacity: 1; }
 </style>
 </head>
 <body>
+
 <div style="padding: 10px; background: rgba(0,0,0,0.3); text-align: center;">
 <audio id="bgMusic" loop>
-    <source src="music.mp3" type="audio/mpeg">
-    </audio>
-
-    <div id="musicBtn" class="floating-btn" onclick="toggleMusic()">
-    <span id="musicIcon">🎵</span>
-    </div>
+<source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+</audio>
+<div id="musicBtn" class="floating-btn" onclick="window.toggleMusic()">
+<span id="musicIcon">🎵</span>
+</div>
+</div>
 
 <header class="main-header">
 <div class="logo-zone">
@@ -766,6 +767,28 @@ window.logout = () => signOut(auth).then(() => location.reload());
 window.quickPost = () => { window.showPage('home-page'); document.getElementById('postInput').focus(); };
 window.viewPhoto = (src) => { document.getElementById('full-photo').src = src; document.getElementById('photo-page').style.display='block'; };
 window.closePhoto = () => document.getElementById('photo-page').style.display='none';
+
+// 1. ประกาศตัวแปร Audio ไว้ข้างนอกฟังก์ชัน (Global)
+// ถ้าคุณภูมีไฟล์เพลง ให้ใส่ URL ตรงนี้ครับ
+window.bgMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+window.isPlaying = false;
+
+// 2. ฟังก์ชันควบคุมเพลง (ปรับแก้ให้กดง่ายขึ้น)
+window.toggleMusic = () => {
+const music = window.bgMusic;
+if (window.isPlaying) {
+music.pause();
+window.isPlaying = false;
+alert("หยุดเพลงแล้วครับ");
+} else {
+music.play().then(() => {
+window.isPlaying = true;
+}).catch(e => {
+console.error("Browser บล็อกเพลง:", e);
+alert("กดปุ่มเพื่ออนุญาตให้เล่นเพลงนะครับ");
+});
+}
+};
 </script>
 </body>
 </html>
