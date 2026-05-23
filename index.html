@@ -592,6 +592,9 @@ if (targetPage) targetPage.classList.add('active');
 const nav = document.querySelector(`[onclick="showPage('${pageId}')"]`);
 if (nav) nav.classList.add('active');
 };
+
+// ตัวแปรเก็บหมวดหมู่ปัจจุบัน เริ่มต้นด้วยทั้งหมด
+window.currentFeedCategory = 'ทั้งหมด';
     
 // ปรับฟังก์ชันเลือกหมวดหมู่ให้จำค่าลงตัวแปรด้วย
 window.filterFeed = (cat) => {
