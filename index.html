@@ -790,6 +790,16 @@ audio.pause();
 icon.innerText = "🎵"; // เปลี่ยนกลับเป็นรูปโน้ตเมื่อหยุดเพลง
 }
 };
+
+// --- ระบบ Auto-play หลังแตะหน้าจอครั้งแรก ---
+document.body.addEventListener('click', () => {
+const audio = document.getElementById('bgMusic');
+if (audio && audio.paused) {
+audio.play().catch(e => console.log("Auto-play blocked"));
+document.getElementById('musicIcon').innerText = "⏸️";
+}
+}, { once: true }); 
+// {once: true} หมายความว่าให้ทำงานแค่ครั้งแรกครั้งเดียวที่แตะจอครับ
 </script>
 </body>
 </html>
