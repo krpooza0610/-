@@ -558,15 +558,16 @@ ${p.image ? `<img src="${p.image}" class="post-img" style="width:100%; border-ra
 container.insertAdjacentHTML('afterbegin', html);
 };
 
+// แก้ไขส่วนท้ายของ renderPost
 const postImg = container.querySelector(`#post-${id} .post-img`);
 if(postImg) {
-postImg.addEventListener('touchend', (e) => {
-const now = Date.now();
-if(now - lastTap < 300) { window.likePost(id); }
-lastTap = now;
-});
+    let lastTap = 0; // ประกาศตัวแปรนี้ข้างใน
+    postImg.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        if(now - lastTap < 300) { window.likePost(id); }
+        lastTap = now;
+    });
 }
-};
 
 // --- 2. ระบบกันออก (แก้ให้ทำงานทุกหน้า) ---
 window.addEventListener('popstate', () => {
